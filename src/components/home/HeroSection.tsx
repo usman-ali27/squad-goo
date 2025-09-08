@@ -15,11 +15,11 @@ const HeroSection = () => {
           {/* Content */}
           <div className="text-white space-y-8">
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 Find Your Dream
                 <span className="block text-accent">Career Today</span>
               </h1>
-              <p className="text-xl text-white/90 leading-relaxed max-w-lg">
+              <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-lg">
                 Australia's premier job platform connecting exceptional talent with innovative companies. 
                 Build your career, grow your business.
               </p>
@@ -38,18 +38,18 @@ const HeroSection = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8">
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8">
               <div className="text-center">
-                <div className="text-2xl font-bold">50K+</div>
-                <div className="text-sm text-white/80">Active Jobs</div>
+                <div className="text-xl sm:text-2xl font-bold">50K+</div>
+                <div className="text-xs sm:text-sm text-white/80">Active Jobs</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">200K+</div>
-                <div className="text-sm text-white/80">Job Seekers</div>
+                <div className="text-xl sm:text-2xl font-bold">200K+</div>
+                <div className="text-xs sm:text-sm text-white/80">Job Seekers</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">10K+</div>
-                <div className="text-sm text-white/80">Companies</div>
+                <div className="text-xl sm:text-2xl font-bold">10K+</div>
+                <div className="text-xs sm:text-sm text-white/80">Companies</div>
               </div>
             </div>
           </div>

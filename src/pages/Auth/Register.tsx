@@ -71,7 +71,7 @@ const Register = () => {
       <div className="absolute top-1/2 left-8 w-8 h-8 bg-yellow-400 rounded-full shadow-lg"></div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-xs sm:max-w-md">
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center pb-8">
             {/* Logo */}
@@ -159,7 +159,7 @@ const Register = () => {
 
               {/* Account Type Selection */}
               <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {accountTypes.map((type) => {
                     const IconComponent = type.icon;
                     return (
@@ -168,19 +168,19 @@ const Register = () => {
                         type="button"
                         onClick={() => setSelectedType(type.id as any)}
                         className={cn(
-                          "flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200",
+                          "flex flex-col sm:flex-col items-center p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 min-h-[80px] sm:min-h-[100px]",
                           selectedType === type.id
                             ? "border-primary bg-primary/5 text-primary"
                             : "border-gray-200 hover:border-gray-300 text-muted-foreground hover:text-foreground"
                         )}
                       >
                         <div className={cn(
-                          "w-12 h-12 rounded-full flex items-center justify-center mb-2",
+                          "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1 sm:mb-2",
                           selectedType === type.id ? "bg-primary text-white" : "bg-gray-100"
                         )}>
-                          <IconComponent className="h-5 w-5" />
+                          <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
-                        <span className="text-sm font-medium">{type.name}</span>
+                        <span className="text-xs sm:text-sm font-medium text-center">{type.name}</span>
                       </button>
                     );
                   })}

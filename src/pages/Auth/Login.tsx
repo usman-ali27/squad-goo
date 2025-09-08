@@ -49,7 +49,7 @@ const Login = () => {
       <div className="absolute top-1/2 left-8 w-8 h-8 bg-yellow-400 rounded-full shadow-lg"></div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-xs sm:max-w-md">
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center pb-8">
             {/* Logo */}

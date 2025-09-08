@@ -30,29 +30,29 @@ const ProfileLayout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary-light to-primary">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-primary to-primary-light text-white py-12">
+      <div className="bg-gradient-to-r from-primary to-primary-light text-white py-8 sm:py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-start gap-8">
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 sm:gap-8">
             {/* Profile Avatar */}
             <div className="relative">
-              <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
+              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-xl">
                 <AvatarImage src="/placeholder.svg" alt="Profile" />
-                <AvatarFallback className="text-2xl bg-white text-primary">PG</AvatarFallback>
+                <AvatarFallback className="text-xl sm:text-2xl bg-white text-primary">PG</AvatarFallback>
               </Avatar>
               <Button
                 size="icon"
-                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-accent hover:bg-accent-hover"
+                className="absolute -bottom-2 -right-2 h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-accent hover:bg-accent-hover"
               >
-                <Settings className="h-4 w-4" />
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
 
             {/* Profile Info */}
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-4 text-center lg:text-left">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Pusparaj Giri</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Pusparaj Giri</h1>
                 <p className="text-white/80 mb-4">ABC - email@gmail.com</p>
-                <div className="flex items-center space-x-4 text-sm text-white/80">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-white/80">
                   <div className="flex items-center space-x-1">
                     <Phone className="h-4 w-4" />
                     <span>+61 234 234 233</span>
@@ -65,7 +65,7 @@ const ProfileLayout = () => {
               </div>
 
               {/* Rating and Account Type */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center lg:justify-between gap-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-1">
                     {[1, 2, 3, 4].map((star) => (
@@ -76,7 +76,7 @@ const ProfileLayout = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
                   <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                     Main Account
                   </Badge>
@@ -102,7 +102,7 @@ const ProfileLayout = () => {
                     key={tab.name}
                     to={tab.href}
                     className={cn(
-                      "block w-full text-left px-4 py-3 text-sm font-medium rounded-lg mb-1 transition-all duration-200",
+                      "block w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-lg mb-1 transition-all duration-200",
                       isActive(tab.href, tab.exact)
                         ? "bg-accent text-white shadow-md"
                         : "text-muted-foreground hover:bg-gray-50 hover:text-foreground"

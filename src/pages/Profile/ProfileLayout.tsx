@@ -11,6 +11,7 @@ const ProfileLayout = () => {
   
   const profileTabs = [
     { name: "Basic Details", href: "/profile", exact: true },
+    { name: "Company Details", href: "/profile/company" },
     { name: "Job Experience", href: "/profile/experience" },
     { name: "Job Preferences", href: "/profile/preferences" },
     { name: "Qualification & Education", href: "/profile/education" },

@@ -13,6 +13,14 @@ const Login = lazy(() => import("./pages/Auth/Login"));
 const Register = lazy(() => import("./pages/Auth/Register"));
 const ProfileLayout = lazy(() => import("./pages/Profile/ProfileLayout"));
 const BasicDetails = lazy(() => import("./pages/Profile/BasicDetails"));
+const CompanyDetails = lazy(() => import("./pages/Profile/CompanyDetails"));
+const JobExperience = lazy(() => import("./pages/Profile/JobExperience"));
+const JobPreferences = lazy(() => import("./pages/Profile/JobPreferences"));
+const Education = lazy(() => import("./pages/Profile/Education"));
+const TaxInformation = lazy(() => import("./pages/Profile/TaxInformation"));
+const SocialMediaLinks = lazy(() => import("./pages/Profile/SocialMediaLinks"));
+const KYCVerification = lazy(() => import("./pages/Profile/KYCVerification"));
+const Documents = lazy(() => import("./pages/Profile/Documents"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -43,13 +51,14 @@ const App = () => (
               {/* Profile routes */}
               <Route path="profile" element={<ProfileLayout />}>
                 <Route index element={<BasicDetails />} />
-                <Route path="experience" element={<div className="p-8">Experience Page - Coming Soon</div>} />
-                <Route path="preferences" element={<div className="p-8">Preferences Page - Coming Soon</div>} />
-                <Route path="education" element={<div className="p-8">Education Page - Coming Soon</div>} />
-                <Route path="tax" element={<div className="p-8">Tax Information Page - Coming Soon</div>} />
-                <Route path="social" element={<div className="p-8">Social Media Page - Coming Soon</div>} />
-                <Route path="kyc" element={<div className="p-8">KYC Verification Page - Coming Soon</div>} />
-                <Route path="documents" element={<div className="p-8">Documents Page - Coming Soon</div>} />
+                <Route path="company" element={<CompanyDetails />} />
+                <Route path="experience" element={<JobExperience />} />
+                <Route path="preferences" element={<JobPreferences />} />
+                <Route path="education" element={<Education />} />
+                <Route path="tax" element={<TaxInformation />} />
+                <Route path="social" element={<SocialMediaLinks />} />
+                <Route path="kyc" element={<KYCVerification />} />
+                <Route path="documents" element={<Documents />} />
               </Route>
               
               {/* Other main routes */}

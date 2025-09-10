@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Chrome, User, Calendar, Settings } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -14,9 +15,14 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedType, setSelectedType] = useState<"jobseeker" | "individual" | "recruiter">("jobseeker");
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    contactNumber: "",
     email: "",
     password: "",
+    referralCode: "",
+    agreeTerms: false,
   });
 
   const accountTypes = [
@@ -93,49 +99,104 @@ const Register = () => {
 
           <CardContent className="space-y-6">
             <form onSubmit={handleRegister} className="space-y-4">
-              {/* Full Name Field */}
+              {/* Name Fields Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* First Name Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="Enter first name"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Middle Name Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="middleName">Middle Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="middleName"
+                      type="text"
+                      placeholder="Enter middle name"
+                      value={formData.middleName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, middleName: e.target.value }))}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Last Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="fullName"
+                    id="lastName"
                     type="text"
-                    placeholder="Enter Your full name"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                    placeholder="Enter last name"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                     className="pl-10"
                     required
                   />
                 </div>
               </div>
 
+              {/* Contact Number Field */}
+              <div className="space-y-2">
+                <Label htmlFor="contactNumber">Contact Number *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">📱</span>
+                  <Input
+                    id="contactNumber"
+                    type="tel"
+                    placeholder="Enter contact number"
+                    value={formData.contactNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, contactNumber: e.target.value }))}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">SMS verification required to continue</p>
+              </div>
+
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">Email Address *</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter Your email address"
+                    placeholder="Enter email address"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     className="pl-10"
                     required
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">Email verification required to continue</p>
               </div>
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password *</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter Your password"
+                    placeholder="Enter password"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     className="pl-10 pr-10"
@@ -154,6 +215,44 @@ const Register = () => {
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
+                </div>
+              </div>
+
+              {/* Referral Code Field */}
+              <div className="space-y-2">
+                <Label htmlFor="referralCode">Referral Code</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">🎁</span>
+                  <Input
+                    id="referralCode"
+                    type="text"
+                    placeholder="Enter referral code (optional)"
+                    value={formData.referralCode}
+                    onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value }))}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Terms and Conditions */}
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="agreeTerms"
+                  checked={formData.agreeTerms}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, agreeTerms: !!checked }))}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label 
+                    htmlFor="agreeTerms" 
+                    className="text-sm font-normal leading-relaxed cursor-pointer"
+                  >
+                    I agree to the{" "}
+                    <a href="#" className="text-primary hover:underline">Terms and Conditions</a>,{" "}
+                    <a href="#" className="text-primary hover:underline">Privacy Policy</a>,{" "}
+                    <a href="#" className="text-primary hover:underline">User Agreement</a>, and{" "}
+                    <a href="#" className="text-primary hover:underline">Declarations</a>
+                  </Label>
                 </div>
               </div>
 
@@ -188,7 +287,13 @@ const Register = () => {
               </div>
 
               {/* Register Button */}
-              <Button type="submit" variant="orange" className="w-full" size="lg">
+              <Button 
+                type="submit" 
+                variant="orange" 
+                className="w-full" 
+                size="lg"
+                disabled={!formData.agreeTerms}
+              >
                 Register
               </Button>
             </form>

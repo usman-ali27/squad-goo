@@ -54,12 +54,19 @@ const Login = () => {
           <CardHeader className="text-center pb-8">
             {/* Logo */}
             <div className="flex justify-center mb-6">
-              <div className="flex items-center space-x-2">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-hover">
-                  <span className="text-xl font-bold text-white">SG</span>
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-xl font-bold text-white">S</span>
+                  </div>
+                  <div className="absolute -right-1 -bottom-1 w-6 h-6 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center">
+                    <span className="text-sm font-bold text-white">G</span>
+                  </div>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-bold tracking-tight">SquadGoo</span>
+                  <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-purple-600 bg-clip-text text-transparent">
+                    SquadGoo
+                  </span>
                   <span className="text-xs text-muted-foreground uppercase tracking-wider">Modern Workplace</span>
                 </div>
               </div>

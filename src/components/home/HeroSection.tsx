@@ -3,11 +3,12 @@ import { Search, Briefcase, Users, TrendingUp } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section className="relative bg-gradient-to-br from-primary via-primary-light to-primary min-h-[80vh] flex items-center overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
+    <section className="relative bg-gradient-to-br from-purple-600 via-purple-500 to-orange-400 min-h-[80vh] flex items-center overflow-hidden">
+      {/* Background Pattern with workspace elements */}
+      <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-64 h-64 bg-white rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">

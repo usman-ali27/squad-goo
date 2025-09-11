@@ -18,6 +18,9 @@ const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout")
 
 // Dashboard components
 const DashboardHome = lazy(() => import("./pages/Dashboard/DashboardHome"));
+const Settings = lazy(() => import("./pages/Dashboard/Settings"));
+const AccountUpgrades = lazy(() => import("./pages/Dashboard/AccountUpgrades"));
+const Support = lazy(() => import("./pages/Dashboard/Support"));
 
 // Profile components
 const ProfileLayout = lazy(() => import("./pages/Profile/ProfileLayout"));
@@ -84,9 +87,9 @@ const App = () => (
               <Route path="candidates" element={<div className="p-8 text-center">Candidates Page Coming Soon</div>} />
               <Route path="messages" element={<div className="p-8 text-center">Messages Page Coming Soon</div>} />
               <Route path="wallet" element={<div className="p-8 text-center">Wallet Page Coming Soon</div>} />
-              <Route path="settings" element={<div className="p-8 text-center">Settings Page Coming Soon</div>} />
-              <Route path="upgrades" element={<div className="p-8 text-center">Account Upgrades Page Coming Soon</div>} />
-              <Route path="support" element={<div className="p-8 text-center">Support Page Coming Soon</div>} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="upgrades" element={<AccountUpgrades />} />
+              <Route path="support" element={<Support />} />
             </Route>
             
             {/* Catch-all route */}

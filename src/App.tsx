@@ -11,6 +11,15 @@ import LoadingSpinner from "./components/ui/LoadingSpinner";
 const HomePage = lazy(() => import("./pages/Home/HomePage"));
 const Login = lazy(() => import("./pages/Auth/Login"));
 const Register = lazy(() => import("./pages/Auth/Register"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Layout components
+const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
+
+// Dashboard components
+const DashboardHome = lazy(() => import("./pages/Dashboard/DashboardHome"));
+
+// Profile components
 const ProfileLayout = lazy(() => import("./pages/Profile/ProfileLayout"));
 const BasicDetails = lazy(() => import("./pages/Profile/BasicDetails"));
 const CompanyDetails = lazy(() => import("./pages/Profile/CompanyDetails"));
@@ -21,7 +30,6 @@ const TaxInformation = lazy(() => import("./pages/Profile/TaxInformation"));
 const SocialMediaLinks = lazy(() => import("./pages/Profile/SocialMediaLinks"));
 const KYCVerification = lazy(() => import("./pages/Profile/KYCVerification"));
 const Documents = lazy(() => import("./pages/Profile/Documents"));
-const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,10 +70,23 @@ const App = () => (
               </Route>
               
               {/* Other main routes */}
-              <Route path="job-seeker" element={<div className="p-8 min-h-screen flex items-center justify-center">Job Seeker Portal - Coming Soon</div>} />
-              <Route path="recruiter" element={<div className="p-8 min-h-screen flex items-center justify-center">Recruiter Portal - Coming Soon</div>} />
               <Route path="about" element={<div className="p-8 min-h-screen flex items-center justify-center">About Us - Coming Soon</div>} />
               <Route path="contact" element={<div className="p-8 min-h-screen flex items-center justify-center">Contact Us - Coming Soon</div>} />
+            </Route>
+
+            {/* Dashboard section with nested routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="find-jobs" element={<div className="p-8 text-center">Find Jobs Page Coming Soon</div>} />
+              <Route path="find-staff" element={<div className="p-8 text-center">Find Staff Page Coming Soon</div>} />
+              <Route path="job-pool" element={<div className="p-8 text-center">Job Pool Page Coming Soon</div>} />
+              <Route path="applications" element={<div className="p-8 text-center">Applications Page Coming Soon</div>} />
+              <Route path="candidates" element={<div className="p-8 text-center">Candidates Page Coming Soon</div>} />
+              <Route path="messages" element={<div className="p-8 text-center">Messages Page Coming Soon</div>} />
+              <Route path="wallet" element={<div className="p-8 text-center">Wallet Page Coming Soon</div>} />
+              <Route path="settings" element={<div className="p-8 text-center">Settings Page Coming Soon</div>} />
+              <Route path="upgrades" element={<div className="p-8 text-center">Account Upgrades Page Coming Soon</div>} />
+              <Route path="support" element={<div className="p-8 text-center">Support Page Coming Soon</div>} />
             </Route>
             
             {/* Catch-all route */}

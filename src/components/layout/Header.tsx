@@ -76,7 +76,7 @@ const Header = () => {
               <Grid3X3 className="h-4 w-4" />
             </Button>
 
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2">
                   <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center">
@@ -95,7 +95,7 @@ const Header = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             <Button variant="orange" size="sm">
               Recruiter

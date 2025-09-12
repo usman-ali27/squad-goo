@@ -1,207 +1,51 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, Shield, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const TaxInformation = () => {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Tax Information</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your tax details for employment and payment processing</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Tax Information</h2>
+        <div className="w-full h-1 bg-orange-500 rounded-full mt-2" />
+      </div>
+
+      <form className="space-y-8">
+        <div className="space-y-2">
+          <Label htmlFor="tfn">Tax File Number (TFN)</Label>
+          <Input id="tfn" placeholder="Enter your TFN" />
+          <div className="flex items-center space-x-2 pt-1">
+            <Checkbox id="tfn-mandatory" disabled checked className="data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"/>
+            <Label htmlFor="tfn-mandatory" className="text-sm font-normal text-gray-500">
+              Either TFN or ABN is mandatory
+            </Label>
+          </div>
         </div>
 
-        <Alert>
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            Your tax information is securely encrypted and will only be used for employment and payment processing purposes.
-          </AlertDescription>
-        </Alert>
+        <div className="space-y-2">
+          <Label htmlFor="abn">Australian Business Number (ABN)</Label>
+          <Input id="abn" placeholder="Enter your ABN" />
+           <div className="flex items-center space-x-2 pt-1">
+            <Checkbox id="abn-mandatory" disabled checked className="data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"/>
+            <Label htmlFor="abn-mandatory" className="text-sm font-normal text-gray-500">
+              Either TFN or ABN is mandatory
+            </Label>
+          </div>
+        </div>
 
-        {/* Tax File Number */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <FileText className="h-5 w-5 mr-2" />
-              Tax File Number (TFN)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tfn">Tax File Number (TFN) *</Label>
-              <Input 
-                id="tfn" 
-                placeholder="Enter your TFN"
-                maxLength={11}
-                className="max-w-md"
-              />
-              <div className="flex items-start gap-2 mt-2">
-                <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-muted-foreground">
-                  Either TFN or ABN is mandatory for tax compliance. Your TFN is required for PAYG withholding.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          <Label htmlFor="tax-residency">Tax Residency Status</Label>
+          <Input id="tax-residency" value="Australian Tax Resident" />
+        </div>
 
-        {/* Australian Business Number */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Australian Business Number (ABN)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="abn">Australian Business Number (ABN)</Label>
-              <Input 
-                id="abn" 
-                placeholder="Enter your ABN"
-                maxLength={14}
-                className="max-w-md"
-              />
-              <div className="flex items-start gap-2 mt-2">
-                <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-muted-foreground">
-                  Either TFN or ABN is mandatory. ABN is required if you're operating as a sole trader or business entity.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tax Residency Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Tax Residency Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="residencyStatus">Tax Residency Status *</Label>
-              <Select>
-                <SelectTrigger className="max-w-md">
-                  <SelectValue placeholder="Select your tax residency status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="australian-resident">Australian Tax Resident</SelectItem>
-                  <SelectItem value="foreign-resident">Foreign Resident</SelectItem>
-                  <SelectItem value="working-holiday">Working Holiday Maker</SelectItem>
-                  <SelectItem value="temporary-resident">Temporary Resident</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Your tax residency status affects your tax rates and obligations in Australia.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="countryOfResidence">Country of Tax Residence</Label>
-              <Select>
-                <SelectTrigger className="max-w-md">
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="australia">Australia</SelectItem>
-                  <SelectItem value="united-states">United States</SelectItem>
-                  <SelectItem value="united-kingdom">United Kingdom</SelectItem>
-                  <SelectItem value="canada">Canada</SelectItem>
-                  <SelectItem value="new-zealand">New Zealand</SelectItem>
-                  <SelectItem value="singapore">Singapore</SelectItem>
-                  <SelectItem value="india">India</SelectItem>
-                  <SelectItem value="china">China</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Higher Education Loan Program */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Higher Education Loan Program (HELP)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <Label>Do you have a HELP, VSL, or TSL debt?</Label>
-              <Select>
-                <SelectTrigger className="max-w-md">
-                  <SelectValue placeholder="Select option" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="unsure">I'm not sure</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                If you have a HELP debt, additional tax may be withheld from your payments.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Medicare Exemption */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Medicare Levy Exemption</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <Label>Are you exempt from the Medicare Levy?</Label>
-              <Select>
-                <SelectTrigger className="max-w-md">
-                  <SelectValue placeholder="Select option" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="full-exemption">Full exemption</SelectItem>
-                  <SelectItem value="half-exemption">Half exemption</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Foreign residents and some visa holders may be exempt from the Medicare Levy.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tax Declaration */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Tax Declaration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                By providing your tax information, you declare that the information is true and correct. 
-                False or misleading information may result in penalties.
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-2">
-              <Label htmlFor="declarationDate">Declaration Date</Label>
-              <Input 
-                id="declarationDate" 
-                type="date" 
-                defaultValue={new Date().toISOString().split('T')[0]}
-                className="max-w-md"
-                readOnly
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end">
-          <Button className="w-full sm:w-auto">
+        <div className="flex justify-start pt-4">
+          <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
             Save Tax Information
           </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

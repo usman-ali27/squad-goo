@@ -65,14 +65,14 @@ const BasicDetails = () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
+    <div className="p-4">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold text-foreground mb-2">Basic Details</h1>
-        <div className="h-1 w-16 bg-accent rounded-full"></div>
+        <div className="h-1 w-full bg-accent rounded-full"></div>
       </div>
 
-      <Card>
-        <CardContent className="p-8 space-y-6">
+      <Card className="border-0">
+        <CardContent className="space-y-6 p-0">
           {/* Name Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">

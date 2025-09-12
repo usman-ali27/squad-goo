@@ -1,16 +1,25 @@
 
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, User, Briefcase, FileText, Share2, Shield, Award, UserCheck } from 'lucide-react';
+import { Home, User, Briefcase, FileText, Share2, Shield, Award, Building, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from '@/components/ui/button';
-import { Star, MapPin, Phone, Mail, Settings } from "lucide-react";
+import { Star, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
-const profileNavItems = [
+const recruiterNavItems = [
+  { name: "Basic Details", href: "/profile" },
+  { name: "Company Details", href: "/profile/company" },
+  { name: "Tax Information", href: "/profile/tax" },
+  { name: "Social Media Links", href: "/profile/social" },
+  { name: "KYC & KYB Verification", href: "/profile/kyc" },
+  { name: "Documents & Certificates", href: "/profile/documents" },
+];
+
+const jobSeekerNavItems = [
   { name: "Basic Details", href: "/profile", exact: true },
   { name: "Company Details", href: "/profile/company" },
   { name: "Job Experience", href: "/profile/experience" },
@@ -69,6 +78,7 @@ const ProfileLayout = () => {
 
   const headerBgClass = isRecruiter ? 'bg-orange-600' : 'bg-purple-700';
   const isKycPage = location.pathname === '/profile/kyc';
+  const navItems = isRecruiter ? recruiterNavItems : jobSeekerNavItems;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -80,7 +90,7 @@ const ProfileLayout = () => {
             <div className="relative">
               <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-xl">
                 <AvatarImage src="/placeholder.svg" alt="Profile" />
-                <AvatarFallback className="text-xl sm:text-2xl bg-white text-purple-700 font-bold">{user.initials}</AvatarFallback>
+                <AvatarFallback className="text-xl sm:text-2xl bg-white text-orange-600 font-bold">{user.initials}</AvatarFallback>
               </Avatar>
               <Button size="icon" className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100">
                 <Home className="h-4 w-4" />
@@ -90,17 +100,17 @@ const ProfileLayout = () => {
             {/* Profile Info */}
             <div className="flex-1 space-y-2 text-center lg:text-left">
               {/* Name */}
-              <h1 className="text-2xl sm:text-3xl font-bold">Pusparaj Giri</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">{user.name}</h1>
 
               {/* Info Row */}
               <div className="flex flex-col lg:flex-row lg:justify-between gap-6">
 
                 {/* Left Side: Email + Phone */}
                 <div className="flex flex-row lg:flex-col items-center lg:items-start text-sm text-white/80 gap-2 lg:gap-1">
-                  <p className="text-white/80">ABC - email@gmail.com</p>
+                  <p className="text-white/80">{user.email}</p>
                   <div className="flex items-center space-x-1">
                     <Phone className="h-4 w-4" />
-                    <span>+61 234 234 233</span>
+                    <span>{user.phone}</span>
                   </div>
                 </div>
 
@@ -129,7 +139,7 @@ const ProfileLayout = () => {
                       Main Account
                     </Badge>
 
-                    <Switch className="data-[state=checked]:bg-orange-500" />
+                    <Switch className="data-[state=checked]:bg-green-500" />
 
                     <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                       Squad Account
@@ -151,7 +161,7 @@ const ProfileLayout = () => {
              <div className="sticky top-20">
                 <div className="bg-white rounded-xl shadow-lg p-4">
                 <nav className="flex flex-col gap-1">
-                    {profileNavItems.map((item) => {
+                    {navItems.map((item) => {
                     const isActive = location.pathname === item.href;
                     return (
                         <Link

@@ -8,28 +8,50 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { login } from "@/services/authService";
 
 const Login = () => {
   const { toast } = useToast();
+  const { login: authLogin } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const navigate = useNavigate();
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Login Successful",
-      description: "Welcome back to SquadGoo!",
-    });
+    
+    setIsLoading(true);
+    try {
+      const response = await login(formData);
+      const { user, token } = response.data;
+      
+      // Use AuthContext login method
+      authLogin(user, token);
+      
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to SquadGoo!",
+      });
 
-    setTimeout(() => {
-      navigate("/");
-    }, 1000);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -154,8 +176,12 @@ const Login = () => {
                 variant="orange"
                 className="w-full"
                 size="lg"
+                disabled={isLoading}
               >
-                Login
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                ) : null}
+                {isLoading ? "Signing in..." : "Login"}
               </Button>
             </form>
 

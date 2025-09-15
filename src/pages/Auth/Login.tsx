@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link , useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,6 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
@@ -30,7 +28,7 @@ const Login = () => {
     });
 
     setTimeout(() => {
-      navigate("/profile");
+      navigate("/");
     }, 1000);
   };
 
@@ -53,11 +51,21 @@ const Login = () => {
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-8">
             <div className="flex flex-col items-center justify-center mb-4">
-              <img src="/assets/images/icon.jpeg" alt="Modern Workplace Logo" className="w-16 mb-3" />
-              <span className="text-xs font-bold text-orange-500 tracking-widest">MODERN WORKPLACE</span>
+              <img
+                src="/assets/images/logo-official.jpeg"
+                alt="Modern Workplace Logo"
+                className="w-20 mb-3"
+              />
+              <span className="text-xs font-bold text-orange-500 tracking-widest">
+                MODERN WORKPLACE
+              </span>
             </div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back!</h1>
-            <p className="text-sm text-muted-foreground">Please enter your details to login</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Welcome Back!
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Please enter your details to login
+            </p>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -71,7 +79,12 @@ const Login = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     className="pl-10 bg-gray-50"
                     required
                   />
@@ -87,7 +100,12 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
                     className="pl-10 pr-10 bg-gray-50"
                     required
                   />
@@ -112,9 +130,14 @@ const Login = () => {
                   <Checkbox
                     id="remember"
                     checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      setRememberMe(checked as boolean)
+                    }
                   />
-                  <Label htmlFor="remember" className="font-medium text-muted-foreground">
+                  <Label
+                    htmlFor="remember"
+                    className="font-medium text-muted-foreground"
+                  >
                     Remember me
                   </Label>
                 </div>
@@ -126,7 +149,12 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" variant="orange" className="w-full" size="lg">
+              <Button
+                type="submit"
+                variant="orange"
+                className="w-full"
+                size="lg"
+              >
                 Login
               </Button>
             </form>
@@ -136,7 +164,9 @@ const Login = () => {
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white/95 px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-white/95 px-2 text-muted-foreground">
+                  Or continue with
+                </span>
               </div>
             </div>
 
@@ -147,7 +177,11 @@ const Login = () => {
               size="lg"
               onClick={handleGoogleLogin}
             >
-              <img src="https://www.google.com/favicon.ico" alt="Google icon" className="w-5 h-5 mr-2" />
+              <img
+                src="https://www.google.com/favicon.ico"
+                alt="Google icon"
+                className="w-5 h-5 mr-2"
+              />
               Sign in with Google
             </Button>
 

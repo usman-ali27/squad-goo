@@ -1,8 +1,16 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, Search, Bell, MessageSquare, Grid3X3, ChevronDown } from "lucide-react";
+import {
+  Menu,
+  X,
+  User,
+  Search,
+  Bell,
+  MessageSquare,
+  Grid3X3,
+  ChevronDown,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +26,8 @@ const Header = () => {
 
   const navigation = [
     { name: "Home", href: "/" },
-    { name: "Dashboard", href: "/dashboard" },
-    { name: "Profile", href: "/profile" },
+    // { name: "Dashboard", href: "/dashboard" },
+    // { name: "Profile", href: "/profile" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
   ];
@@ -32,7 +40,11 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img src="/assets/images/logo.jpeg" alt="SquadGoo Logo" className="h-10 w-auto" />
+            <img
+              src="/assets/images/logo.jpeg"
+              alt="SquadGoo Logo"
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -57,21 +69,21 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="relative">
               <Search className="h-4 w-4" />
             </Button>
-            
-            <Button variant="ghost" size="icon" className="relative">
+
+            {/* <Button variant="ghost" size="icon" className="relative">
               <MessageSquare className="h-4 w-4" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-accent">
                 3
               </Badge>
             </Button>
-            
+
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-4 w-4" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-accent">
                 5
               </Badge>
-            </Button>
-            
+            </Button> */}
+
             <Button variant="ghost" size="icon">
               <Grid3X3 className="h-4 w-4" />
             </Button>
@@ -96,7 +108,11 @@ const Header = () => {
                 <DropdownMenuItem>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu> */}
-
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                Login
+              </Button>
+            </Link>
             <Button variant="orange" size="sm">
               Recruiter
             </Button>
@@ -112,7 +128,11 @@ const Header = () => {
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {isMenuOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
@@ -125,7 +145,9 @@ const Header = () => {
                   key={item.name}
                   to={item.href}
                   className={`text-sm font-medium transition-colors ${
-                    isActive(item.href) ? "text-accent" : "text-muted-foreground"
+                    isActive(item.href)
+                      ? "text-accent"
+                      : "text-muted-foreground"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >

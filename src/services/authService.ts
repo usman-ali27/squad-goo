@@ -1,3 +1,4 @@
+
 import apiClient from './apiService';
 
 export const sendEmailVerification = (email: string, type: string) => {
@@ -10,4 +11,8 @@ export const verifyEmailCode = (email: string, code: string) => {
 
 export const register = (data: any) => {
   return apiClient.post('/api/register', data);
+};
+
+export const login = (data: any) => {
+    return apiClient.post('/api/login', data);
 };

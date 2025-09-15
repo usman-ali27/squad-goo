@@ -252,7 +252,7 @@ const Register = () => {
                 Create your account
               </h1>
               <p className="text-sm text-muted-foreground">
-                Please enter Your details to login
+                Please enter your details to register
               </p>
             </CardHeader>
 

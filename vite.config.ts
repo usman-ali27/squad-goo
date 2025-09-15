@@ -10,6 +10,9 @@ export default defineConfig({
     react(),
     visualizer({ open: true, filename: "bundle-analysis.html" }), // Add this line
   ],
+  server: {
+    port: 8080
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

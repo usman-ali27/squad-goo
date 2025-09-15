@@ -65,7 +65,7 @@ const ExampleCard = () => (
 
 const ProfileLayout = () => {
   const location = useLocation();
-  const isRecruiter = false; // This would be dynamically determined
+  const isRecruiter = true; // This would be dynamically determined
   const user = {
     name: 'Pusparaj Giri',
     email: 'ABC - email@gmail.com',
@@ -76,14 +76,20 @@ const ProfileLayout = () => {
     isSquadAccount: false,
   };
 
-  const headerBgClass = isRecruiter ? 'bg-orange-600' : 'bg-purple-700';
+  const headerBgImage = isRecruiter
+    ? `url(/assets/images/employer.jpeg)`
+    : `url(/assets/images/recurities.jpeg)`;
+
   const isKycPage = location.pathname === '/profile/kyc';
   const navItems = isRecruiter ? recruiterNavItems : jobSeekerNavItems;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
-      <div className={cn("text-white pb-24", headerBgClass)}>
+      <div
+        style={{ backgroundImage: headerBgImage }}
+        className="text-white pb-24 bg-cover bg-center"
+      >
         <div className="w-[85%] mx-auto pt-8 sm:pt-12">
           <div className="flex flex-col lg:flex-row lg:items-start gap-6 sm:gap-8">
             {/* Profile Avatar */}

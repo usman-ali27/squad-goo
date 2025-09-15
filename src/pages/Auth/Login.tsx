@@ -43,8 +43,11 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
-      style={{ backgroundImage: "url(/assets/images/login-background.jpeg)" }}
+      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: "url(/assets/images/login-background.jpeg)",
+        backgroundAttachment: "fixed",
+      }}
     >
       <div className="relative z-10 w-full max-w-sm sm:max-w-md">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">

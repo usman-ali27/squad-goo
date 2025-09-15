@@ -6,10 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Mail, Lock, User, Briefcase, Building } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Briefcase, Building, Send, CheckCircle2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+const isValidEmail = (email: string) => {
+  // A simple regex for email validation
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
 const Register = () => {
   const { toast } = useToast();
@@ -25,6 +32,11 @@ const Register = () => {
     referralCode: "",
     agreeTerms: false,
   });
+
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
 
   const accountTypes = [
     {
@@ -44,11 +56,51 @@ const Register = () => {
     }
   ];
 
+  const handleSendCode = async () => {
+    setIsSendingCode(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsSendingCode(false);
+    setEmailVerificationSent(true);
+    toast({
+      title: "Verification Code Sent",
+      description: "A code has been sent to your email address.",
+    });
+  };
+
+  const handleVerifyCode = async () => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (verificationCode === "123456") { // Dummy verification code
+      setIsEmailVerified(true);
+      toast({
+        title: "Email Verified",
+        description: "Your email has been successfully verified.",
+        variant: "success",
+      });
+    } else {
+      toast({
+        title: "Invalid Code",
+        description: "The verification code is incorrect. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEmailVerified) {
+      toast({
+        title: "Please Verify Email",
+        description: "You must verify your email before registering.",
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Registration Successful",
-      description: "Welcome to SquadGoo! Please verify your email.",
+      description: "Welcome to SquadGoo! You can now log in.",
     });
   };
 
@@ -61,8 +113,11 @@ const Register = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
-      style={{ backgroundImage: "url(/assets/images/login-background.jpeg)" }}
+      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: "url(/assets/images/login-background.jpeg)",
+        backgroundAttachment: "fixed",
+      }}
     >
       <div className="relative z-10 w-full max-w-sm sm:max-w-md">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
@@ -152,12 +207,89 @@ const Register = () => {
                     placeholder="Enter email address"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="pl-10 bg-gray-50"
+                    className="pl-10 bg-gray-50 pr-12"
                     required
+                    disabled={emailVerificationSent}
                   />
+                  <AnimatePresence>
+                    {isValidEmail(formData.email) && !emailVerificationSent && !isEmailVerified && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="absolute right-1 top-1 transform -translate-y-1/2"
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={handleSendCode}
+                              disabled={isSendingCode}
+                              className="h-8 w-8 text-orange-600 hover:bg-orange-100 hover:text-orange-700"
+                            >
+                              {isSendingCode ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : <Send className="h-4 w-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Send verification code</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </motion.div>
+                    )}
+                     {isEmailVerified && (
+                       <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                         className="absolute right-2 top-2 transform -translate-y-1/2"
+                       >
+                         <Tooltip>
+                         <TooltipTrigger asChild>
+                         <CheckCircle2 className="h-5 w-5 text-green-500" />
+                         </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Email Verified</p>
+                          </TooltipContent>
+                        </Tooltip>
+                       </motion.div>
+                     )}
+                  </AnimatePresence>
                 </div>
-                <p className="text-xs text-muted-foreground">Immediate email code verification to continue</p>
+                {!emailVerificationSent && <p className="text-xs text-muted-foreground">Immediate email code verification to continue</p>}
               </div>
+
+               <AnimatePresence>
+                {emailVerificationSent && !isEmailVerified && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    <Label htmlFor="verificationCode">Verification Code</Label>
+                    <div className="relative">
+                      <Input
+                        id="verificationCode"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        className="bg-gray-50"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleVerifyCode}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8"
+                        variant="orange"
+                      >
+                        Verify
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -242,8 +374,7 @@ const Register = () => {
                       <div className={cn(
                         "w-10 h-10 rounded-full flex items-center justify-center mb-2",
                         selectedType === type.id ? "bg-white/20" : "bg-gray-100"
-                      )}>
-                        <IconComponent className={cn("h-5 w-5", selectedType === type.id ? "text-white" : "text-gray-500")} />
+                      )}>                      <IconComponent className={cn("h-5 w-5", selectedType === type.id ? "text-white" : "text-gray-500")} />
                       </div>
                       <span className="text-xs font-medium text-center">{type.name}</span>
                     </button>
@@ -251,8 +382,7 @@ const Register = () => {
                 })}
               </div>
 
-              <Button type="submit" variant="orange" className="w-full" size="lg" disabled={!formData.agreeTerms}>
-                Register
+              <Button type="submit" variant="orange" className="w-full" size="lg" disabled={!formData.agreeTerms || !isEmailVerified}>               Register
               </Button>
             </form>
 
@@ -271,8 +401,7 @@ const Register = () => {
               className="w-full"
               size="lg"
               onClick={handleGoogleRegister}
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google icon" className="w-5 h-5 mr-2" />
+            >             <img src="https://www.google.com/favicon.ico" alt="Google icon" className="w-5 h-5 mr-2" />
               Sign in with Google
             </Button>
 

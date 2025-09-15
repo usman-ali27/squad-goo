@@ -50,7 +50,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<LoadingSpinner text="Loading..." />}>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />

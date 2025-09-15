@@ -96,7 +96,7 @@ const Register = () => {
     try {
       await verifyEmailCode(formData.email, verificationCode);
       setIsEmailVerified(true);
-      toast({ title: "Email Verified", description: "Your email has been successfully verified.", variant: "default" });
+      toast({ title: "Email Verified", description: "Your email has been successfully verified.", variant: "success" });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Invalid verification code. Please try again.";
       toast({ title: "Error", description: errorMessage, variant: "destructive" });
@@ -135,7 +135,7 @@ const Register = () => {
     setIsRegistering(true);
     try {
         await register(registrationData);
-        toast({ title: "Registration Successful", description: "Welcome! You can now log in.", variant: "default" });
+        toast({ title: "Registration Successful", description: "Welcome! You can now log in.", variant: "success" });
         navigate("/login");
     } catch (error: any) {
         const errors = error.response?.data?.errors;

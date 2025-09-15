@@ -11,7 +11,8 @@ const CTASection = lazy(() => import("@/components/home/CTASection"));
 const HomePage = () => {
   return (
     <div className="min-h-screen">
-      <Suspense fallback={<LoadingSpinner />}>
+      <div className="p-8 min-h-screen flex items-center justify-center">Home Page - Coming Soon</div>
+      {/* <Suspense fallback={<LoadingSpinner />}>
         <HeroSection />
       </Suspense>
       
@@ -29,7 +30,7 @@ const HomePage = () => {
       
       <Suspense fallback={<LoadingSpinner />}>
         <CTASection />
-      </Suspense>
+      </Suspense> */}
     </div>
   );
 };

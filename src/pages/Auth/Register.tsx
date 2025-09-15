@@ -23,7 +23,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedType, setSelectedType] = useState<"jobseeker" | "individual" | "recruiter" | null>(null);
+  const [selectedType, setSelectedType] = useState<"job_seeker" | "individual" | "recruiter" | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -59,7 +59,7 @@ const Register = () => {
   };
 
   const accountTypes = [
-    { id: "jobseeker", name: "Jobseeker", icon: User },
+    { id: "job_seeker", name: "Jobseeker", icon: User },
     { id: "individual", name: "Individual", icon: Briefcase },
     { id: "recruiter", name: "Recruiter", icon: Building },
   ];

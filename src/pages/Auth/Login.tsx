@@ -30,7 +30,7 @@ const Login = () => {
     });
 
     setTimeout(() => {
-      navigate("/dashboard");
+      navigate("/profile");
     }, 1000);
   };
 

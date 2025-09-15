@@ -8,28 +8,44 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { login as loginService } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const navigate = useNavigate();
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Login Successful",
-      description: "Welcome back to SquadGoo!",
-    });
-
-    setTimeout(() => {
+    setIsLoading(true);
+    try {
+      const response = await loginService(formData);
+      login(response.data.user, response.data.token);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to SquadGoo!",
+      });
       navigate("/");
-    }, 1000);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "An unexpected error occurred. Please try again.";
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -154,8 +170,13 @@ const Login = () => {
                 variant="orange"
                 className="w-full"
                 size="lg"
+                disabled={isLoading}
               >
-                Login
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
 

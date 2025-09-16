@@ -1,53 +1,92 @@
+
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
   X,
-  User,
-  Search,
-  Bell,
-  MessageSquare,
-  Grid3X3,
-  ChevronDown,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { useIsAuthenticated, useUser, useAuthActions } from "@/stores/authStore";
+import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
+  const { logout } = useAuthActions();
 
   const navigation = [
     { name: "Home", href: "/" },
-    // { name: "Dashboard", href: "/dashboard" },
-    // { name: "Profile", href: "/profile" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
   ];
 
   const isActive = (href: string) => location.pathname === href;
 
+  const handleLogout = () => {
+    logout();
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    navigate("/");
+    setIsMenuOpen(false);
+  };
+
+  const getUserInitials = () => {
+    // Handle job_seeker role specifically
+    if (user?.role === 'job_seeker' && user?.job_seeker) {
+      const { first_name, last_name } = user.job_seeker;
+      if (first_name && last_name) {
+        return `${first_name[0]}${last_name[0]}`.toUpperCase();
+      }
+      if (first_name) {
+        return first_name.substring(0, 2).toUpperCase();
+      }
+    }
+
+    // Fallback for other roles or if job_seeker object is missing
+    if (user?.name) {
+      return user.name.substring(0, 2).toUpperCase();
+    }
+    
+    return "U";
+  }
+  
+  const getDisplayName = () => {
+    // Handle job_seeker role specifically
+    if (user?.role === 'job_seeker' && user?.job_seeker) {
+      const { first_name, last_name } = user.job_seeker;
+      if (first_name && last_name) {
+        return `${first_name} ${last_name}`;
+      }
+    }
+    // Fallback for other roles
+    return user?.name || 'Anonymous User';
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img
               src="/assets/images/logo.jpeg"
-              alt="SquadGoo Logo"
+              alt="Modern Workplace Logo"
               className="h-10 w-auto"
             />
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
               <Link
@@ -64,64 +103,54 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Search className="h-4 w-4" />
-            </Button>
+          <div className="hidden md:flex items-center space-x-2">
+          <Button variant="orange" size="sm"> Recruiter </Button> <Button variant="orange-outline" size="sm"> Jobseeker </Button>
 
-            {/* <Button variant="ghost" size="icon" className="relative">
-              <MessageSquare className="h-4 w-4" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-accent">
-                3
-              </Badge>
-            </Button>
-
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-accent">
-                5
-              </Badge>
-            </Button> */}
-
-            <Button variant="ghost" size="icon">
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center space-x-2">
-                  <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">Profile Settings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Sign Out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                Login
-              </Button>
-            </Link>
-            <Button variant="orange" size="sm">
-              Recruiter
-            </Button>
-            <Button variant="orange-outline" size="sm">
-              Jobseeker
-            </Button>
+            {!isAuthenticated ? (
+                <>
+                    <Link to="/login">
+                        <Button variant="outline" size="sm">
+                            Login
+                        </Button>
+                    </Link>
+                    <Link to="/register">
+                        <Button variant="orange" size="sm">
+                            Register
+                        </Button>
+                    </Link>
+                </>
+            ) : (
+                <>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src={user?.profile_picture || ''} alt={getDisplayName()} />
+                                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56" forceMount>
+                            <DropdownMenuLabel className="font-normal">
+                                <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
+                                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link to="/profile">Profile Settings</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleLogout}>
+                                Sign Out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -136,7 +165,6 @@ const Header = () => {
           </Button>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden border-t py-4">
             <nav className="flex flex-col space-y-4">
@@ -154,13 +182,35 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              {isAuthenticated && (
+                 <Link
+                    key="Dashboard"
+                    to="/dashboard"
+                    className={`text-sm font-medium transition-colors ${
+                    isActive("/dashboard")
+                        ? "text-accent"
+                        : "text-muted-foreground"
+                    }`}
+                     onClick={() => setIsMenuOpen(false)}
+                >
+                    Dashboard
+                </Link>
+              )}
               <div className="flex flex-col space-y-2 pt-4 border-t">
-                <Button variant="orange" size="sm">
-                  Recruiter
-                </Button>
-                <Button variant="orange-outline" size="sm">
-                  Jobseeker
-                </Button>
+                {!isAuthenticated ? (
+                    <>
+                        <Button asChild variant="outline" size="sm" onClick={() => setIsMenuOpen(false)}>
+                           <Link to="/login">Login</Link>
+                        </Button>
+                        <Button asChild variant="orange" size="sm" onClick={() => setIsMenuOpen(false)}>
+                           <Link to="/register">Register</Link>
+                        </Button>
+                    </>
+                ) : (
+                     <Button variant="ghost" size="sm" onClick={handleLogout}>
+                        Sign Out
+                     </Button>
+                )}
               </div>
             </nav>
           </div>

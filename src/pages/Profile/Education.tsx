@@ -1,85 +1,106 @@
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Plus, Save, Trash2 } from "lucide-react";
-
-const EducationItem = () => (
-  <Card className="border-l-4 border-l-purple-600 overflow-hidden">
-    <CardHeader className="flex flex-row items-center justify-between bg-gray-50 p-4">
-      <CardTitle className="text-base font-semibold">Bachelor of Computer Science</CardTitle>
-      <div className="flex items-center gap-1">
-        <Button size="sm" variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700">
-          Edit
-        </Button>
-        <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700">
-          Delete
-        </Button>
-        <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500">
-          <Copy className="h-4 w-4" />
-        </Button>
-        <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500">
-          <Save className="h-4 w-4" />
-        </Button>
-      </div>
-    </CardHeader>
-    <CardContent className="p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="qual-type">Qualification Type</Label>
-          <Input id="qual-type" value="Bachelor's Degree" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="institution">Institution</Label>
-          <Input id="institution" value="University of Sydney" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         <div className="space-y-2">
-          <Label htmlFor="year-completed">Year Completed</Label>
-          <Input id="year-completed" value="2019" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="grade">Grade/GPA</Label>
-          <Input id="grade" value="Distinction" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const QualificationItem = () => (
-  <Card className="border-l-4 border-l-purple-600 overflow-hidden">
-    <CardHeader className="bg-gray-50 p-4">
-      <CardTitle className="text-base font-semibold">AWS Certified Developer</CardTitle>
-    </CardHeader>
-    <CardContent className="p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="cert-name">Certification Name</Label>
-          <Input id="cert-name" value="AWS Certified Developer - Associate" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="issuing-org">Issuing Organization</Label>
-          <Input id="issuing-org" value="Amazon Web Services" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="issue-date">Issue Date</Label>
-          <Input id="issue-date" value="03/09/2025" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="expiry-date">Expiry Date</Label>
-          <Input id="expiry-date" value="07/15/2028" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+import { Plus, Save, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/stores/authStore";
+import { getJobSeekerEducation, saveJobSeekerEducation } from "@/services/educationService";
 
 const Education = () => {
+  const { toast } = useToast();
+  const user = useUser();
+  const [education, setEducation] = useState<any[]>([]);
+  const [errors, setErrors] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && user.job_seeker) {
+      setIsLoading(true);
+      getJobSeekerEducation(user.job_seeker.id)
+        .then(response => {
+          const eduData = response.data.data || [];
+          setEducation(eduData);
+          setErrors(eduData.map(() => ({})));
+        })
+        .catch(() => {
+          toast({ title: "Error", description: "Failed to fetch education details.", variant: "destructive" });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [user, toast]);
+
+  const handleAddEducation = () => {
+    setEducation(prev => [...prev, { qualification_type: '', institution: '', year_completed: '', grade: '' }]);
+    setErrors(prev => [...prev, {}]);
+  };
+
+  const handleRemoveEducation = (index) => {
+    setEducation(prev => prev.filter((_, i) => i !== index));
+    setErrors(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEducationChange = (index, field, value) => {
+    const updatedEducation = [...education];
+    updatedEducation[index][field] = value;
+    setEducation(updatedEducation);
+    
+    if (errors[index] && errors[index][field]) {
+        const updatedErrors = [...errors];
+        delete updatedErrors[index][field];
+        setErrors(updatedErrors);
+    }
+  };
+
+  const validateEducation = () => {
+    let isValid = true;
+    const newErrors = education.map(edu => {
+      const eduErrors: any = {};
+      if (!edu.qualification_type.trim()) {
+        eduErrors.qualification_type = "Qualification type is required.";
+        isValid = false;
+      }
+      if (!edu.institution.trim()) {
+        eduErrors.institution = "Institution is required.";
+        isValid = false;
+      }
+      if (!edu.year_completed.trim()) {
+        eduErrors.year_completed = "Year completed is required.";
+        isValid = false;
+      } else if (!/^\d{4}$/.test(edu.year_completed) || parseInt(edu.year_completed) > new Date().getFullYear()) {
+        eduErrors.year_completed = "Please enter a valid 4-digit year.";
+        isValid = false;
+      }
+      return eduErrors;
+    });
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSaveEducation = () => {
+    if (validateEducation() && user && user.job_seeker) {
+      setIsLoading(true);
+      saveJobSeekerEducation(user.job_seeker.id, education)
+        .then((response) => {
+          toast({ title: "Success", description: "Education details saved successfully." });
+          const updatedEducations = response.data.data.educations || [];
+          setEducation(updatedEducations);
+          setErrors(updatedEducations.map(() => ({})));
+        })
+        .catch(error => {
+          const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
+          toast({ title: "Error", description: errorMsg, variant: "destructive" });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  };
+
   return (
     <div className="space-y-10">
       <div>
@@ -87,31 +108,69 @@ const Education = () => {
         <div className="w-full h-1 bg-orange-500 rounded-full mt-2" />
       </div>
 
-      {/* Educational Details Section */}
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h3 className="text-lg font-semibold text-purple-700">Educational Details</h3>
-          <Button className="bg-green-600 hover:bg-green-700 text-white w-full md:w-auto">
+          <Button onClick={handleAddEducation} className="bg-green-600 hover:bg-green-700 text-white w-full md:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Add Education
           </Button>
         </div>
-        <EducationItem />
-      </div>
-
-      {/* Extra Qualifications Section */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h3 className="text-lg font-semibold text-purple-700">Extra Qualifications</h3>
-          <Button className="bg-green-600 hover:bg-green-700 text-white w-full md:w-auto">
-            <Plus className="mr-2 h-4 w-4" /> Add Qualification
-          </Button>
-        </div>
-        <QualificationItem />
+        {isLoading && !education.length ? <p>Loading...</p> : education.map((edu, index) => (
+          <Card key={edu.id || index} className="border-l-4 border-l-purple-600 overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between bg-gray-50 p-4">
+              <CardTitle className="text-base font-semibold">
+                {edu.qualification_type || "New Education"}
+              </CardTitle>
+              <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleRemoveEducation(index)}>
+                <Trash2 className="w-4 h-4 mr-2"/>
+                Delete
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Qualification Type</Label>
+                  <Input 
+                    value={edu.qualification_type} 
+                    onChange={e => handleEducationChange(index, 'qualification_type', e.target.value)} 
+                    placeholder="e.g., Bachelor's Degree"
+                    className={errors[index]?.qualification_type ? "border-red-500" : ""}
+                   />
+                   {errors[index]?.qualification_type && <p className="text-sm text-red-500">{errors[index]?.qualification_type}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label>Institution</Label>
+                  <Input 
+                    value={edu.institution} 
+                    onChange={e => handleEducationChange(index, 'institution', e.target.value)} 
+                    placeholder="e.g., University of Sydney"
+                    className={errors[index]?.institution ? "border-red-500" : ""} />
+                    {errors[index]?.institution && <p className="text-sm text-red-500">{errors[index]?.institution}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Year Completed</Label>
+                  <Input 
+                    value={edu.year_completed} 
+                    onChange={e => handleEducationChange(index, 'year_completed', e.target.value)} 
+                    placeholder="e.g., 2019"
+                    className={errors[index]?.year_completed ? "border-red-500" : ""} />
+                    {errors[index]?.year_completed && <p className="text-sm text-red-500">{errors[index]?.year_completed}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label>Grade/GPA</Label>
+                  <Input value={edu.grade} onChange={e => handleEducationChange(index, 'grade', e.target.value)} placeholder="e.g., Distinction" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="flex justify-end pt-4">
-        <Button size="lg" className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto">
-          Save All Qualification
+        <Button size="lg" onClick={handleSaveEducation} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
+          {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2"/>Save All Education</>}
         </Button>
       </div>
     </div>

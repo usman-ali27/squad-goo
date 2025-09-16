@@ -1,14 +1,14 @@
 
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, User, Briefcase, FileText, Share2, Shield, Award, Building, UserCheck } from 'lucide-react';
+import { Home, User, Briefcase, FileText, Share2, Shield, Award, Building, UserCheck, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from '@/components/ui/button';
-import { Star, Phone } from "lucide-react";
+import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
+import { useUser } from '@/stores/authStore';
 
 const recruiterNavItems = [
   { name: "Basic Details", href: "/profile" },
@@ -20,8 +20,7 @@ const recruiterNavItems = [
 ];
 
 const jobSeekerNavItems = [
-  { name: "Basic Details", href: "/profile", exact: true },
-  { name: "Company Details", href: "/profile/company" },
+  { name: "Basic Details", href: "/profile" },
   { name: "Job Experience", href: "/profile/experience" },
   { name: "Job Preferences", href: "/profile/preferences" },
   { name: "Qualification & Education", href: "/profile/education" },
@@ -65,23 +64,24 @@ const ExampleCard = () => (
 
 const ProfileLayout = () => {
   const location = useLocation();
-  const isRecruiter = true; // This would be dynamically determined
-  const user = {
-    name: 'Pusparaj Giri',
-    email: 'ABC - email@gmail.com',
-    phone: '+01 234 234 233',
-    initials: 'PG',
-    rating: 4,
-    isMainAccount: true,
-    isSquadAccount: false,
+  const user = useUser();
+
+  if (!user) {
+    return <div>Loading user profile...</div>;
+  }
+  const isRecruiter = user.role === 'recruiter';
+  
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
   const headerBgImage = isRecruiter
-    ? `url(/assets/images/employer.jpeg)`
-    : `url(/assets/images/recurities.jpeg)`;
+    ? `url(/assets/images/recurities.jpeg)`
+    : `url(/assets/images/employer.jpeg)`;
 
   const isKycPage = location.pathname === '/profile/kyc';
   const navItems = isRecruiter ? recruiterNavItems : jobSeekerNavItems;
+  const userPhone = user.role === 'job_seeker' ? user.job_seeker?.phone : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,8 +95,10 @@ const ProfileLayout = () => {
             {/* Profile Avatar */}
             <div className="relative">
               <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-xl">
-                <AvatarImage src="/placeholder.svg" alt="Profile" />
-                <AvatarFallback className="text-xl sm:text-2xl bg-white text-orange-600 font-bold">{user.initials}</AvatarFallback>
+                <AvatarImage src={user.profile_picture || '/placeholder.svg'} alt={user.name} />
+                <AvatarFallback className="text-xl sm:text-2xl bg-white text-orange-600 font-bold">
+                  {getInitials(user.name)}
+                </AvatarFallback>
               </Avatar>
               <Button size="icon" className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100">
                 <Home className="h-4 w-4" />
@@ -114,10 +116,12 @@ const ProfileLayout = () => {
                 {/* Left Side: Email + Phone */}
                 <div className="flex flex-row lg:flex-col items-center lg:items-start text-sm text-white/80 gap-2 lg:gap-1">
                   <p className="text-white/80">{user.email}</p>
-                  <div className="flex items-center space-x-1">
-                    <Phone className="h-4 w-4" />
-                    <span>{user.phone}</span>
-                  </div>
+                  {userPhone && (
+                    <div className="flex items-center space-x-1">
+                        <Phone className="h-4 w-4" />
+                        <span>{userPhone}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Side: Review + Badges */}

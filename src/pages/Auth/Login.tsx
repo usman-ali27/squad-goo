@@ -3,21 +3,20 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { login as loginService } from "@/services/authService";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthActions } from "@/stores/authStore";
 
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = useAuthActions();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,15 +24,14 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       const response = await loginService(formData);
-      login(response.data.user, response.data.token);
+      login(response.data.user, response.data.token, rememberMe);
       toast({
         title: "Login Successful",
-        description: "Welcome back to SquadGoo!",
+        description: "Welcome back!",
       });
       navigate("/");
     } catch (error: any) {
@@ -52,8 +50,8 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     toast({
-      title: "Google Login",
-      description: "Redirecting to Google authentication...",
+      title: "Coming Soon!",
+      description: "Google login will be available in a future update.",
     });
   };
 
@@ -65,43 +63,40 @@ const Login = () => {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md">
+      <div className="relative z-10 w-full max-w-sm">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-8">
             <div className="flex flex-col items-center justify-center mb-4">
               <img
-                src="/assets/images/logo-official.jpeg"
+                src="/assets/images/icon.jpeg"
                 alt="Modern Workplace Logo"
-                className="w-20 mb-3"
+                className="w-16 mb-3"
               />
-              <span className="text-xs font-bold text-orange-500 tracking-widest">
+              <span className="text-xs font-semibold text-orange-500 tracking-widest">
                 MODERN WORKPLACE
               </span>
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Welcome Back!
+              Welcome Back
             </h1>
             <p className="text-sm text-muted-foreground">
               Please enter your details to login
             </p>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Adress</Label>
+                <Label htmlFor="email">Email address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="Enter email address"
                     value={formData.email}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
+                      setFormData({ ...formData, email: e.target.value })
                     }
                     className="pl-10 bg-gray-50"
                     required
@@ -116,13 +111,10 @@ const Login = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        password: e.target.value,
-                      }))
+                      setFormData({ ...formData, password: e.target.value })
                     }
                     className="pl-10 pr-10 bg-gray-50"
                     required
@@ -144,18 +136,13 @@ const Login = () => {
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
-                    id="remember"
+                    id="remember-me"
                     checked={rememberMe}
-                    onCheckedChange={(checked) =>
-                      setRememberMe(checked as boolean)
-                    }
+                    onCheckedChange={() => setRememberMe(!rememberMe)}
                   />
-                  <Label
-                    htmlFor="remember"
-                    className="font-medium text-muted-foreground"
-                  >
+                  <Label htmlFor="remember-me" className="font-normal">
                     Remember me
                   </Label>
                 </div>
@@ -182,9 +169,9 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="relative">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
+                <Separator />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white/95 px-2 text-muted-foreground">
@@ -208,13 +195,13 @@ const Login = () => {
               Sign in with Google
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground pt-4">
-              Not a member Yet?{" "}
+            <p className="text-center text-sm text-muted-foreground pt-6">
+              Not a member yet?{" "}
               <Link
                 to="/register"
                 className="font-medium text-orange-600 hover:text-orange-500 transition-colors"
               >
-                Join Now
+                Register
               </Link>
             </p>
           </CardContent>

@@ -1,24 +1,42 @@
 import axios from 'axios';
 import { BASE_URL } from '@/config/api';
+import useAuthStore from '@/stores/authStore';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
 });
 
-// Add a response interceptor to handle API-level success/failure
+// Request Interceptor: Injects the auth token into every outgoing request
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor: Handles API responses, especially auth errors
 apiClient.interceptors.response.use(
   (response) => {
-    // If the API response body indicates failure, reject the promise
-    // This will trigger the .catch() block in our component
+    // If the response body indicates a failure (but the HTTP status is 2xx)
     if (response.data && response.data.success === false) {
-      // Reject with an object that mimics an Axios error structure
-      return Promise.reject({ response: response });
+      return Promise.reject(new Error(response.data.message || 'An API error occurred'));
     }
-    // If successful, just return the response
     return response;
   },
   (error) => {
-    // For genuine network errors or non-2xx status codes, let the error propagate
+    // If the error is a 401 Unauthorized
+    if (error.response && error.response.status === 401) {
+      // Use the logout action from the auth store
+      useAuthStore.getState().actions.logout();
+      // Optionally, redirect to the login page
+      // window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );

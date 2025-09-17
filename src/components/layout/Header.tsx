@@ -17,7 +17,7 @@ import {
 import { useIsAuthenticated, useUser, useAuthActions } from "@/stores/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import logo from "/assets/images/logo.jpeg?format=webp&quality=80";
+import logo from "/assets/images/logo.jpeg";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -159,6 +159,7 @@ const Header = () => {
             size="icon"
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
             {isMenuOpen ? (
               <X className="h-4 w-4" />

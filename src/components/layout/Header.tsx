@@ -17,6 +17,7 @@ import {
 import { useIsAuthenticated, useUser, useAuthActions } from "@/stores/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import logo from "/assets/images/logo.jpeg?format=webp&quality=80";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -81,9 +82,11 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <img
-              src="/assets/images/logo.jpeg"
+              src={logo}
               alt="Modern Workplace Logo"
               className="h-10 w-auto"
+              width="51"
+              height="40"
             />
           </Link>
 

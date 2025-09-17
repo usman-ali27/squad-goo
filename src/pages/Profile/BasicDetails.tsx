@@ -29,7 +29,6 @@ const BasicDetails = () => {
       setIsLoading(true);
       getJobSeekerProfile(user.job_seeker.id)
         .then(response => {
-          console.log(response)
           const { first_name, last_name, dob, address, bio } = response.data.data;
           setFormData({
             first_name: first_name || "",

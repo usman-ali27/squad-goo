@@ -1,53 +1,98 @@
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Info, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useUser, useAuthActions } from "@/stores/authStore";
+import { updateTaxInformation, TaxInformationPayload } from "@/services/jobSeekerService";
 
 const TaxInformation = () => {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Tax Information</h2>
-        <div className="w-full h-1 bg-orange-500 rounded-full mt-2" />
-      </div>
+    const { toast } = useToast();
+    const user = useUser();
+    const { updateJobSeeker } = useAuthActions();
+    const [taxInfo, setTaxInfo] = useState<Omit<TaxInformationPayload, 'id'>>({});
+    const [isLoading, setIsLoading] = useState(false);
 
-      <form className="space-y-8">
-        <div className="space-y-2">
-          <Label htmlFor="tfn">Tax File Number (TFN)</Label>
-          <Input id="tfn" placeholder="Enter your TFN" />
-          <div className="flex items-center space-x-2 pt-1">
-            <Checkbox id="tfn-mandatory" disabled checked className="data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"/>
-            <Label htmlFor="tfn-mandatory" className="text-sm font-normal text-gray-500">
-              Either TFN or ABN is mandatory
-            </Label>
-          </div>
-        </div>
+    useEffect(() => {
+        if (user && user.job_seeker) {
+            setTaxInfo({
+                tfn: user.job_seeker.tfn,
+                abn: user.job_seeker.abn,
+                trs: user.job_seeker.trs,
+            });
+        }
+    }, [user]);
 
-        <div className="space-y-2">
-          <Label htmlFor="abn">Australian Business Number (ABN)</Label>
-          <Input id="abn" placeholder="Enter your ABN" />
-           <div className="flex items-center space-x-2 pt-1">
-            <Checkbox id="abn-mandatory" disabled checked className="data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"/>
-            <Label htmlFor="abn-mandatory" className="text-sm font-normal text-gray-500">
-              Either TFN or ABN is mandatory
-            </Label>
-          </div>
-        </div>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setTaxInfo(prev => ({ ...prev, [id]: value }));
+    };
 
-        <div className="space-y-2">
-          <Label htmlFor="tax-residency">Tax Residency Status</Label>
-          <Input id="tax-residency" value="Australian Tax Resident" />
-        </div>
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (user && user.job_seeker) {
+            setIsLoading(true);
+            const payload: TaxInformationPayload = { ...taxInfo, id: user.job_seeker.id };
+            updateTaxInformation(payload)
+                .then(response => {
+                    toast({ title: "Success", description: "Tax information saved successfully." });
+                    if (user && user.job_seeker) {
+                        const updatedJobSeeker = { ...user.job_seeker, ...taxInfo };
+                        updateJobSeeker(updatedJobSeeker);
+                    }
+                })
+                .catch(error => {
+                    const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
+                    toast({ title: "Error", description: errorMsg, variant: "destructive" });
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
+        }
+    };
 
-        <div className="flex justify-start pt-4">
-          <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-            Save Tax Information
-          </Button>
+    const taxFields = [
+        { id: "tfn", label: "TFN", placeholder: "Your TFN" },
+        { id: "abn", label: "ABN", placeholder: "Your ABN" },
+        { id: "trs", label: "TRS", placeholder: "Your TRS" },
+    ];
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight">Tax Information</h2>
+                <div className="w-full h-1 bg-orange-500 rounded-full mt-2" />
+            </div>
+
+            <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <Info className="h-5 w-5 text-blue-500" />
+                <p className="text-sm text-blue-700">
+                    Your tax information is kept secure and will only be used for payment purposes.
+                </p>
+            </div>
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+                {taxFields.map((field) => (
+                    <div className="space-y-2" key={field.id}>
+                        <Label htmlFor={field.id}>{field.label}</Label>
+                        <Input
+                            id={field.id}
+                            placeholder={field.placeholder}
+                            value={taxInfo[field.id as keyof Omit<TaxInformationPayload, 'id'>] || ''}
+                            onChange={handleChange} />
+                    </div>
+                ))}
+
+                <div className="flex justify-start pt-4">
+                    <Button type="submit" className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
+                        {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Tax Information</>}
+                    </Button>
+                </div>
+            </form>
         </div>
-      </form>
-    </div>
-  );
+    );
 };
 
 export default TaxInformation;

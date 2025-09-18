@@ -260,8 +260,8 @@ const PreferenceCard: React.FC<PreferenceCardProps> = ({ preference, index, onCh
   <div className="border p-4 rounded-lg space-y-4 relative">
     <div className="flex justify-between items-center">
       <div className="text-lg font-semibold">Preference #{index + 1}</div>
-      <Button variant="ghost" size="icon" onClick={() => onRemove(index)} aria-label="Remove preference">
-        <Trash2 className="h-4 w-4 text-destructive" />
+      <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => onRemove(index)} aria-label="Remove preference">
+        <Trash2 className="w-4 h-4" /> Delete
       </Button>
     </div>
 

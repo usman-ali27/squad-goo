@@ -7,6 +7,7 @@ export interface SocialMediaLinksPayload {
   twitter?: string | null;
   instagram?: string | null;
   linkedin?: string | null;
+  github?: string | null;
 }
 
 export const saveSocialMediaLinks = (payload: SocialMediaLinksPayload) => {

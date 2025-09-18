@@ -48,11 +48,11 @@ const Education = () => {
     const updatedEducation = [...education];
     updatedEducation[index][field] = value;
     setEducation(updatedEducation);
-    
+
     if (errors[index] && errors[index][field]) {
-        const updatedErrors = [...errors];
-        delete updatedErrors[index][field];
-        setErrors(updatedErrors);
+      const updatedErrors = [...errors];
+      delete updatedErrors[index][field];
+      setErrors(updatedErrors);
     }
   };
 
@@ -121,8 +121,8 @@ const Education = () => {
               <CardTitle className="text-base font-semibold">
                 {edu.qualification_type || "New Education"}
               </CardTitle>
-              <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleRemoveEducation(index)}>
-                <Trash2 className="w-4 h-4 mr-2"/>
+              <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleRemoveEducation(index)} aria-label="Remove education">
+                <Trash2 className="w-4 h-4" />
                 Delete
               </Button>
             </CardHeader>
@@ -130,33 +130,33 @@ const Education = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Qualification Type</Label>
-                  <Input 
-                    value={edu.qualification_type} 
-                    onChange={e => handleEducationChange(index, 'qualification_type', e.target.value)} 
+                  <Input
+                    value={edu.qualification_type}
+                    onChange={e => handleEducationChange(index, 'qualification_type', e.target.value)}
                     placeholder="e.g., Bachelor's Degree"
                     className={errors[index]?.qualification_type ? "border-red-500" : ""}
-                   />
-                   {errors[index]?.qualification_type && <p className="text-sm text-red-500">{errors[index]?.qualification_type}</p>}
+                  />
+                  {errors[index]?.qualification_type && <p className="text-sm text-red-500">{errors[index]?.qualification_type}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Institution</Label>
-                  <Input 
-                    value={edu.institution} 
-                    onChange={e => handleEducationChange(index, 'institution', e.target.value)} 
+                  <Input
+                    value={edu.institution}
+                    onChange={e => handleEducationChange(index, 'institution', e.target.value)}
                     placeholder="e.g., University of Sydney"
                     className={errors[index]?.institution ? "border-red-500" : ""} />
-                    {errors[index]?.institution && <p className="text-sm text-red-500">{errors[index]?.institution}</p>}
+                  {errors[index]?.institution && <p className="text-sm text-red-500">{errors[index]?.institution}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Year Completed</Label>
-                  <Input 
-                    value={edu.year_completed} 
-                    onChange={e => handleEducationChange(index, 'year_completed', e.target.value)} 
+                  <Input
+                    value={edu.year_completed}
+                    onChange={e => handleEducationChange(index, 'year_completed', e.target.value)}
                     placeholder="e.g., 2019"
                     className={errors[index]?.year_completed ? "border-red-500" : ""} />
-                    {errors[index]?.year_completed && <p className="text-sm text-red-500">{errors[index]?.year_completed}</p>}
+                  {errors[index]?.year_completed && <p className="text-sm text-red-500">{errors[index]?.year_completed}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Grade/GPA</Label>
@@ -170,7 +170,7 @@ const Education = () => {
 
       <div className="flex justify-end pt-4">
         <Button size="lg" onClick={handleSaveEducation} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
-          {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2"/>Save All Education</>}
+          {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save All Education</>}
         </Button>
       </div>
     </div>

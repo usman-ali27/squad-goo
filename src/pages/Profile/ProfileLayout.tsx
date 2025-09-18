@@ -1,6 +1,6 @@
 
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, User, Briefcase, FileText, Share2, Shield, Award, Building, UserCheck, Phone } from 'lucide-react';
+import { FileText, UserCheck, Phone, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,10 @@ import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser } from '@/stores/authStore';
+import { useUser, useAuthActions } from '@/stores/authStore';
+import { useRef, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { uploadProfilePicture } from '@/services/jobSeekerService';
 
 const recruiterNavItems = [
   { name: "Basic Details", href: "/profile" },
@@ -65,6 +68,10 @@ const ExampleCard = () => (
 const ProfileLayout = () => {
   const location = useLocation();
   const user = useUser();
+  const { updateUser } = useAuthActions();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   if (!user) {
     return <div>Loading user profile...</div>;
@@ -73,6 +80,29 @@ const ProfileLayout = () => {
   
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const handleAvatarClick = () => {
+      fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      console.log(user)
+      if (file && user?.job_seeker?.user_id) {
+          setIsUploading(true);
+          try {
+              const response = await uploadProfilePicture(user.job_seeker?.user_id, file);
+              console.log(response)
+              const newImageUrl = response.data.url; // Assuming this is the response structure
+              updateUser({ profile_picture: newImageUrl });
+              toast({ title: "Success", description: "Profile picture updated successfully." });
+          } catch (error) {
+              toast({ title: "Error", description: "Failed to upload profile picture.", variant: "destructive" });
+          } finally {
+              setIsUploading(false);
+          }
+      }
   };
 
   const headerBgImage = isRecruiter
@@ -91,17 +121,18 @@ const ProfileLayout = () => {
         className="text-white pb-24 bg-cover bg-center"
       >
         <div className="w-[85%] mx-auto pt-8 sm:pt-12">
-          <div className="flex flex-col lg:flex-row lg:items-start gap-6 sm:gap-8">
+          <div className="flex flex-col items-center lg:flex-row lg:items-start gap-6 sm:gap-8">
             {/* Profile Avatar */}
             <div className="relative">
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
               <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-xl">
                 <AvatarImage src={user.profile_picture || '/placeholder.svg'} alt={user.name} />
                 <AvatarFallback className="text-xl sm:text-2xl bg-white text-orange-600 font-bold">
                   {getInitials(user.name)}
                 </AvatarFallback>
               </Avatar>
-              <Button size="icon" className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100">
-                <Home className="h-4 w-4" />
+              <Button size="icon" onClick={handleAvatarClick} className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100" disabled={isUploading}>
+                {isUploading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div> : <Camera className="h-4 w-4" />}
               </Button>
             </div>
 
@@ -167,7 +198,7 @@ const ProfileLayout = () => {
       <div className="w-[85%] mx-auto mt-[-64px]">
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
           {/* Left Sidebar Navigation */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 mb-6">
              <div className="sticky top-20">
                 <div className="bg-white rounded-xl shadow-lg p-4">
                 <nav className="flex flex-col gap-1">

@@ -127,8 +127,8 @@ const JobExperience = () => {
         <Card key={exp.id || index} className="border-l-4 border-l-purple-600 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between bg-gray-50 p-4">
             <CardTitle className="text-base font-semibold">{exp.job_title || "New Experience"}</CardTitle>
-            <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleRemoveExperience(index)}>
-                <Trash2 className="w-4 h-4 mr-2"/> Delete
+            <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleRemoveExperience(index)} aria-label="Remove experience">
+                <Trash2 className="w-4 h-4"/> Delete
             </Button>
           </CardHeader>
           <CardContent className="p-6 space-y-6">

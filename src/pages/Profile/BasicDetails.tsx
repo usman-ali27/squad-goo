@@ -141,7 +141,7 @@ const BasicDetails = () => {
             <div className="space-y-2">
               <Label htmlFor="contactNumber">Contact Number</Label>
               <Input id="contactNumber" value={user.job_seeker.phone || ''} readOnly />
-              <p className="text-xs text-muted-foreground">Re: Verification required when changing contact number</p>
+              {/* <p className="text-xs text-muted-foreground">Re: Verification required when changing contact number</p> */}
             </div>
           )}
 

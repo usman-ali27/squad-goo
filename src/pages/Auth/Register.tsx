@@ -12,8 +12,6 @@ import {
   Mail,
   Lock,
   User,
-  Briefcase,
-  Building,
   Send,
   CheckCircle2,
   Phone,
@@ -36,13 +34,18 @@ import {
   register,
 } from "@/services/authService";
 
+import { LiaUsersSolid } from "react-icons/lia";
+import { LiaUserSolid } from "react-icons/lia";
+import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
+
+
 const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
 const isValidPhone = (phone: string) => {
-    const cleanedPhone = phone.replace(/\s/g, '');
-    return /^(\+61\d{9}|\+92\d{10})$/.test(cleanedPhone);
+  const cleanedPhone = phone.replace(/\s/g, '');
+  return /^(\+61\d{9}|\+92\d{10})$/.test(cleanedPhone);
 };
 
 const Register = () => {
@@ -105,9 +108,9 @@ const Register = () => {
   const startPhoneResendTimer = () => setPhoneResendTimer(60);
 
   const accountTypes = [
-    { id: "job_seeker", name: "Jobseeker", icon: User },
-    { id: "individual", name: "Individual", icon: Briefcase },
-    { id: "recruiter", name: "Recruiter", icon: Building },
+    { id: "job_seeker", name: "Jobseeker", icon: LiaUserSolid },
+    { id: "individual", name: "Individual", icon: HiOutlineBuildingOffice2 },
+    { id: "recruiter", name: "Recruiter", icon: LiaUsersSolid },
   ];
 
   const handleSendEmailCode = async () => {
@@ -149,50 +152,50 @@ const Register = () => {
     }
   };
 
- const handleSendPhoneCode = async () => {
+  const handleSendPhoneCode = async () => {
     const cleanedPhone = formData.contactNumber.replace(/\s/g, '');
     if (!isValidPhone(cleanedPhone)) {
-        toast({ title: "Invalid Phone Number", description: "Please use a valid AU (+61) or PK (+92) number.", variant: "destructive" });
-        return;
+      toast({ title: "Invalid Phone Number", description: "Please use a valid AU (+61) or PK (+92) number.", variant: "destructive" });
+      return;
     }
     setIsSendingPhoneCode(true);
     try {
-        await sendPhoneVerification(cleanedPhone);
-        setPhoneVerificationSent(true);
-        startPhoneResendTimer();
-        toast({ title: "Verification Code Sent", description: "A code has been sent to your phone number." });
+      await sendPhoneVerification(cleanedPhone);
+      setPhoneVerificationSent(true);
+      startPhoneResendTimer();
+      toast({ title: "Verification Code Sent", description: "A code has been sent to your phone number." });
     } catch (error: any) {
-        toast({ title: "Error", description: error.response?.data?.message || "Failed to send phone verification code.", variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.message || "Failed to send phone verification code.", variant: "destructive" });
     } finally {
-        setIsSendingPhoneCode(false);
+      setIsSendingPhoneCode(false);
     }
   };
 
   const handleVerifyPhoneCode = async () => {
     const cleanedPhone = formData.contactNumber.replace(/\s/g, '');
     if (!phoneVerificationCode) {
-        toast({ title: "Invalid Code", description: "Please enter the phone verification code.", variant: "destructive" });
-        return;
+      toast({ title: "Invalid Code", description: "Please enter the phone verification code.", variant: "destructive" });
+      return;
     }
     setIsVerifyingPhoneCode(true);
     try {
-        await verifyPhoneCode(cleanedPhone, phoneVerificationCode);
-        setIsPhoneVerified(true);
-        toast({ title: "Phone Verified", description: "Your phone number has been successfully verified.", variant: "default" });
+      await verifyPhoneCode(cleanedPhone, phoneVerificationCode);
+      setIsPhoneVerified(true);
+      toast({ title: "Phone Verified", description: "Your phone number has been successfully verified.", variant: "default" });
     } catch (error: any) {
-        toast({ title: "Error", description: error.response?.data?.message || "Invalid phone verification code.", variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.message || "Invalid phone verification code.", variant: "destructive" });
     } finally {
-        setIsVerifyingPhoneCode(false);
+      setIsVerifyingPhoneCode(false);
     }
   };
 
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password.length < 6) {
-        toast({ title: "Password Too Short", description: "Password must be at least 6 characters.", variant: "destructive" });
-        return;
+      toast({ title: "Password Too Short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
     }
 
     if (formData.password !== formData.passwordConfirmation) {
@@ -220,9 +223,9 @@ const Register = () => {
 
     setIsRegistering(true);
     try {
-        await register(registrationData);
-        toast({ title: "Registration Successful", description: "Welcome! You can now log in.", variant: "default" });
-        navigate("/login");
+      await register(registrationData);
+      toast({ title: "Registration Successful", description: "Welcome! You can now log in.", variant: "default" });
+      navigate("/login");
     } catch (error: any) {
       const errors = error.response?.data?.errors;
       let errorMessage = error.response?.data?.message || "An unexpected error occurred.";
@@ -279,12 +282,12 @@ const Register = () => {
                     <Input id="contactNumber" type="tel" placeholder="+61... or +92..." value={formData.contactNumber} onChange={(e) => setFormData(p => ({ ...p, contactNumber: e.target.value }))} className="pl-10 bg-gray-50 pr-12" required disabled={phoneVerificationSent} />
                     <AnimatePresence>
                       {isValidPhone(formData.contactNumber) && !phoneVerificationSent && !isPhoneVerified && (
-                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="absolute right-1 top-1/2 transform -translate-y-1/2">
-                           <Tooltip><TooltipTrigger asChild><Button type="button" size="icon" variant="ghost" onClick={handleSendPhoneCode} disabled={isSendingPhoneCode} className="h-8 w-8 text-orange-600 hover:bg-orange-100 hover:text-orange-700">{isSendingPhoneCode ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : <Send className="h-4 w-4" />}</Button></TooltipTrigger><TooltipContent><p>Send verification code</p></TooltipContent></Tooltip>
+                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="absolute right-1 top-1 transform -translate-y-1/2">
+                          <Tooltip><TooltipTrigger asChild><Button type="button" size="icon" variant="ghost" onClick={handleSendPhoneCode} disabled={isSendingPhoneCode} className="h-8 w-8 text-orange-600 hover:bg-orange-100 hover:text-orange-700">{isSendingPhoneCode ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : <Send className="h-4 w-4" />}</Button></TooltipTrigger><TooltipContent><p>Send verification code</p></TooltipContent></Tooltip>
                         </motion.div>
                       )}
                       {isPhoneVerified && (
-                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="absolute right-2 top-2 transform -translate-y-1/2">
                           <Tooltip><TooltipTrigger asChild><CheckCircle2 className="h-5 w-5 text-green-500" /></TooltipTrigger><TooltipContent><p>Phone Verified</p></TooltipContent></Tooltip>
                         </motion.div>
                       )}
@@ -318,14 +321,14 @@ const Register = () => {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input id="email" type="email" placeholder="Enter email address" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} className="pl-10 bg-gray-50 pr-12" required disabled={emailVerificationSent} />
-                     <AnimatePresence>
+                    <AnimatePresence>
                       {isValidEmail(formData.email) && !emailVerificationSent && !isEmailVerified && (
-                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="absolute right-1 top-1/2 transform -translate-y-1/2">
-                           <Tooltip><TooltipTrigger asChild><Button type="button" size="icon" variant="ghost" onClick={handleSendEmailCode} disabled={isSendingEmailCode} className="h-8 w-8 text-orange-600 hover:bg-orange-100 hover:text-orange-700">{isSendingEmailCode ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : <Send className="h-4 w-4" />}</Button></TooltipTrigger><TooltipContent><p>Send verification code</p></TooltipContent></Tooltip>
+                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="absolute right-1 top-1 transform -translate-y-1/2">
+                          <Tooltip><TooltipTrigger asChild><Button type="button" size="icon" variant="ghost" onClick={handleSendEmailCode} disabled={isSendingEmailCode} className="h-8 w-8 text-orange-600 hover:bg-orange-100 hover:text-orange-700">{isSendingEmailCode ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : <Send className="h-4 w-4" />}</Button></TooltipTrigger><TooltipContent><p>Send verification code</p></TooltipContent></Tooltip>
                         </motion.div>
                       )}
                       {isEmailVerified && (
-                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="absolute right-2 top-2 transform -translate-y-1/2">
                           <Tooltip><TooltipTrigger asChild><CheckCircle2 className="h-5 w-5 text-green-500" /></TooltipTrigger><TooltipContent><p>Email Verified</p></TooltipContent></Tooltip>
                         </motion.div>
                       )}
@@ -347,7 +350,7 @@ const Register = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
-                
+
                 {/* Password and Other Inputs */}
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
@@ -367,7 +370,7 @@ const Register = () => {
 
                 {/* Account Type Selection */}
                 <div className="grid grid-cols-3 gap-3 pt-2">
-                  {accountTypes.map((type) => { const IconComponent = type.icon; return <button key={type.id} type="button" onClick={() => setSelectedType(type.id as any)} className={cn("flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 h-24", selectedType === type.id ? "border-purple-600 bg-purple-600 text-white shadow-lg" : "border-gray-200 bg-white hover:border-gray-300 text-muted-foreground hover:text-foreground")}><div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", selectedType === type.id ? "bg-white/20" : "bg-gray-100")}><IconComponent className={cn("h-5 w-5", selectedType === type.id ? "text-white" : "text-gray-500")} /></div><span className="text-xs font-medium text-center">{type.name}</span></button>; })}
+                  {accountTypes.map((type) => { const IconComponent = type.icon; return <button key={type.id} type="button" onClick={() => setSelectedType(type.id as any)} className={cn("flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 h-24", selectedType === type.id ? "border-[#6F4479] bg-[#6F4479] text-white shadow-lg" : "border-gray-200 bg-white hover:border-gray-300 text-muted-foreground hover:text-foreground")}><div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", selectedType === type.id ? "bg-white" : "bg-[#6F4479] text-white")}><IconComponent className={cn("h-5 w-5", selectedType === type.id ? "text-[#6F4479]" : "text-white")} /></div><span className="text-xs font-medium text-center">{type.name}</span></button>; })}
                 </div>
 
                 <div className="flex items-start space-x-3 pt-2">

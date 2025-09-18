@@ -27,6 +27,7 @@ interface JobSeeker {
   twitter?: string | null;
   instagram?: string | null;
   linkedin?: string | null;
+  github?: string | null;
   emergency_contact_suburb?: string | null;
   emergency_contact_country?: string | null;
   country_of_birth?: string | null;
@@ -37,7 +38,7 @@ interface JobSeeker {
   updated_at: string;
 }
 
-interface User {
+export interface User {
   id: number;
   name: string;
   profile_picture?: string | null;
@@ -57,6 +58,7 @@ interface AuthState {
     login: (userData: User, token: string, rememberMe: boolean) => void;
     logout: () => void;
     updateJobSeeker: (jobSeekerData: JobSeeker) => void;
+    updateUser: (userData: Partial<User>) => void;
   };
 }
 
@@ -105,7 +107,18 @@ const useAuthStore = create<AuthState>((set, get) => ({
             storage.setItem('auth-storage', JSON.stringify({ state: stateToPersist, version: 0 }));
             set({ user: updatedUser });
         }
-    }
+    },
+    updateUser: (userData) => {
+        const { user, token } = get();
+        if (user) {
+            const updatedUser = { ...user, ...userData };
+            const rememberMe = !!localStorage.getItem('auth-storage');
+            const storage = rememberMe ? localStorage : sessionStorage;
+            const stateToPersist = { user: updatedUser, token };
+            storage.setItem('auth-storage', JSON.stringify({ state: stateToPersist, version: 0 }));
+            set({ user: updatedUser });
+        }
+    },
   },
 }));
 

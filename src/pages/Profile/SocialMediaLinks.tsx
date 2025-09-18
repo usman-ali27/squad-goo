@@ -22,6 +22,7 @@ const SocialMediaLinks = () => {
         twitter: user.job_seeker.twitter,
         instagram: user.job_seeker.instagram,
         linkedin: user.job_seeker.linkedin,
+        github: user.job_seeker?.github,
       });
     }
   }, [user]);
@@ -59,6 +60,7 @@ const SocialMediaLinks = () => {
     { id: "facebook", label: "Facebook Profile", placeholder: "https://facebook.com/yourprofile" },
     { id: "twitter", label: "Twitter Profile", placeholder: "https://twitter.com/yourprofile" },
     { id: "instagram", label: "Instagram Profile", placeholder: "https://instagram.com/yourprofile" },
+    { id: "github ", label: "Github Profile", placeholder: "https://github.com/yourprofile" },
   ];
 
   return (

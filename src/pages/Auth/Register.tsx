@@ -253,7 +253,7 @@ const Register = () => {
           <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
             <CardHeader className="text-center pb-8">
               <div className="flex flex-col items-center justify-center mb-4">
-                <img src="/assets/images/icon.jpeg" alt="Modern Workplace Logo" className="w-16 mb-3" />
+                <img src="/assets/images/icon.png" alt="Modern Workplace Logo" className="w-16 mb-3" />
                 <span className="text-xs font-semibold text-orange-500 tracking-widest">MODERN WORKPLACE</span>
               </div>
               <h1 className="text-2xl font-bold text-foreground mb-2">Create your account</h1>

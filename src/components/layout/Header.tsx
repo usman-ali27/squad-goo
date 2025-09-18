@@ -17,7 +17,7 @@ import {
 import { useIsAuthenticated, useUser, useAuthActions } from "@/stores/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import logo from "/assets/images/logo.jpeg";
+import logo from "/assets/images/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,8 +84,8 @@ const Header = () => {
             <img
               src={logo}
               alt="Modern Workplace Logo"
-              className="h-10 w-auto"
-              width="51"
+              
+              width="70"
               height="40"
             />
           </Link>

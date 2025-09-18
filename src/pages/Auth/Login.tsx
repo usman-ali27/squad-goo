@@ -68,7 +68,7 @@ const Login = () => {
           <CardHeader className="text-center pb-8">
             <div className="flex flex-col items-center justify-center mb-4">
               <img
-                src="/assets/images/icon.jpeg"
+                src="/assets/images/icon.png"
                 alt="Modern Workplace Logo"
                 className="w-16 mb-3"
               />

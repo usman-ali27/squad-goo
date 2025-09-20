@@ -38,6 +38,61 @@ interface JobSeeker {
   updated_at: string;
 }
 
+export interface Recruiter {
+    id: number;
+    user_id: number;
+    title: string | null;
+    last_name: string;
+    first_name: string;
+    dob: string | null;
+    position: string | null;
+    bio: string | null;
+    email: string;
+    phone: string;
+    address: string | null;
+    kyc_verified: number;
+    business_name: string | null;
+    business_address: string | null;
+    abn: string | null;
+    business_phone: string | null;
+    director_name: string | null;
+    director_contact_number: string | null;
+    director_contact_email: string | null;
+    industry: string | null;
+    kyb_verified: number;
+    payment_method: string | null;
+    card_last_four: string | null;
+    save_card: boolean;
+    auto_charge: boolean;
+    terms_accepted: boolean;
+    status: string;
+    job_title: string | null;
+    job_type: string | null;
+    job_description: string | null;
+    pay_rate: string | null;
+    start_date: string | null;
+    start_time: string | null;
+    finish_date: string | null;
+    finish_time: string | null;
+    extra_qualification: string | null;
+    number_of_staff: string | null;
+    company_reg_date: string | null;
+    daily_pay_from: string | null;
+    daily_pay_to: string | null;
+    fixed_rate: string | null;
+    other_pay_type: string | null;
+    other_rate: string | null;
+    yearly_rate: string | null;
+    created_at: string;
+    updated_at: string;
+    tfn: string | null;
+    trs: string | null;
+    facebook: string | null;
+    twitter: string | null;
+    instagram: string | null;
+    linkedin: string | null;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -48,6 +103,7 @@ export interface User {
   created_at: string;
   updated_at: string;
   job_seeker?: JobSeeker;
+  recruiter?: Recruiter;
 }
 
 interface AuthState {
@@ -58,6 +114,7 @@ interface AuthState {
     login: (userData: User, token: string, rememberMe: boolean) => void;
     logout: () => void;
     updateJobSeeker: (jobSeekerData: JobSeeker) => void;
+    updateRecruiter: (recruiterData: Recruiter) => void; // Added this line
     updateUser: (userData: Partial<User>) => void;
   };
 }
@@ -101,6 +158,17 @@ const useAuthStore = create<AuthState>((set, get) => ({
         const { user, token } = get();
         if (user) {
             const updatedUser = { ...user, job_seeker: jobSeekerData };
+            const rememberMe = !!localStorage.getItem('auth-storage');
+            const storage = rememberMe ? localStorage : sessionStorage;
+            const stateToPersist = { user: updatedUser, token };
+            storage.setItem('auth-storage', JSON.stringify({ state: stateToPersist, version: 0 }));
+            set({ user: updatedUser });
+        }
+    },
+    updateRecruiter: (recruiterData) => {
+        const { user, token } = get();
+        if (user) {
+            const updatedUser = { ...user, recruiter: recruiterData };
             const rememberMe = !!localStorage.getItem('auth-storage');
             const storage = rememberMe ? localStorage : sessionStorage;
             const stateToPersist = { user: updatedUser, token };

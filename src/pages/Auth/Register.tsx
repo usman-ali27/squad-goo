@@ -193,6 +193,11 @@ const Register = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedType) {
+      toast({ title: "Account Type Required", description: "Please select an account type.", variant: "destructive" });
+      return;
+    }
+
     if (formData.password.length < 6) {
       toast({ title: "Password Too Short", description: "Password must be at least 6 characters.", variant: "destructive" });
       return;
@@ -202,9 +207,13 @@ const Register = () => {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
     }
-    if (!isEmailVerified || !isPhoneVerified) {
-      toast({ title: "Verification Required", description: "Please verify both your email and phone number before registering.", variant: "destructive" });
+    if (!isEmailVerified) {
+      toast({ title: "Email Verification Required", description: "Please click on arrow to verify your email before registering.", variant: "destructive" });
       return;
+    }
+    if (!isPhoneVerified) {
+        toast({ title: "Phone Verification Required", description: "Please click on arrow to verify your phone number before registering.", variant: "destructive" });
+        return;
     }
 
     const registrationData = {
@@ -279,7 +288,7 @@ const Register = () => {
                   <Label htmlFor="contactNumber">Contact Number *</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="contactNumber" type="tel" placeholder="+61... or +92..." value={formData.contactNumber} onChange={(e) => setFormData(p => ({ ...p, contactNumber: e.target.value }))} className="pl-10 bg-gray-50 pr-12" required disabled={phoneVerificationSent} />
+                    <Input id="contactNumber" type="tel" placeholder="+61..." value={formData.contactNumber} onChange={(e) => setFormData(p => ({ ...p, contactNumber: e.target.value }))} className="pl-10 bg-gray-50 pr-12" required disabled={phoneVerificationSent} />
                     <AnimatePresence>
                       {isValidPhone(formData.contactNumber) && !phoneVerificationSent && !isPhoneVerified && (
                         <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="absolute right-1 top-1 transform -translate-y-1/2">
@@ -378,7 +387,7 @@ const Register = () => {
                   <div className="grid gap-1.5 leading-none"><Label htmlFor="agreeTerms" className="text-sm font-normal leading-relaxed cursor-pointer">I agree to the <a href="#" className="text-orange-600 hover:underline">Terms and Conditions</a>, <a href="#" className="text-orange-600 hover:underline">Privacy Policy</a>, and other legal documents.</Label></div>
                 </div>
 
-                <Button type="submit" variant="orange" className="w-full" size="lg" disabled={!formData.agreeTerms || !isEmailVerified || !isPhoneVerified || isRegistering}>{isRegistering ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : "Register"}</Button>
+                <Button type="submit" variant="orange" className="w-full" size="lg" disabled={!formData.agreeTerms || isRegistering}>{isRegistering ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : "Register"}</Button>
               </form>
 
               <div className="relative"><div className="absolute inset-0 flex items-center"><Separator /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white/95 px-2 text-muted-foreground">Or continue with</span></div></div>

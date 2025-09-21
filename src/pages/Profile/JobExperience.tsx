@@ -1,15 +1,17 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Save, Trash2, Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/stores/authStore";
 import { getJobSeekerExperiences, saveJobSeekerExperiences, Experience } from "@/services/experienceService";
 import { uploadFileAsBase64 } from "@/services/fileService";
+import { industries } from "@/constants/industries";
 
 const JobExperience = () => {
   const { toast } = useToast();
@@ -18,6 +20,7 @@ const JobExperience = () => {
   const [errors, setErrors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState<number | null>(null);
+  const payRateInputsRef = useRef<Record<string, { pay_min: string; pay_max: string }>>({});
 
   const fetchExperiences = useCallback(() => {
     if (user && user.job_seeker) {
@@ -27,6 +30,9 @@ const JobExperience = () => {
           const expData = response.data.data || [];
           setExperiences(expData);
           setErrors(expData.map(() => ({})));
+          expData.forEach((exp: Experience, index: number) => {
+            payRateInputsRef.current[index] = { pay_min: exp.pay_min || '', pay_max: exp.pay_max || '' };
+          });
         })
         .catch(() => {
           toast({ title: "Error", description: "Failed to fetch job experiences.", variant: "destructive" });
@@ -42,19 +48,47 @@ const JobExperience = () => {
   }, [fetchExperiences]);
 
   const handleAddExperience = () => {
+    const newIndex = experiences.length;
     setExperiences(prev => [...prev, { industry: '', job_title: '', job_description: '', pay_min: '', pay_max: '', start_date: '', end_date: '' }]);
     setErrors(prev => [...prev, {}]);
+    payRateInputsRef.current[newIndex] = { pay_min: '', pay_max: '' };
   };
 
   const handleRemoveExperience = (index: number) => {
     setExperiences(prev => prev.filter((_, i) => i !== index));
     setErrors(prev => prev.filter((_, i) => i !== index));
+    const newPayRateInputs = { ...payRateInputsRef.current };
+    delete newPayRateInputs[index];
+    payRateInputsRef.current = newPayRateInputs;
   };
 
   const handleExperienceChange = (index: number, field: keyof Experience, value: string) => {
     const updatedExperiences = [...experiences];
-    updatedExperiences[index] = { ...updatedExperiences[index], [field]: value };
+    const currentExperience = { ...updatedExperiences[index], [field]: value };
+
+    if (field === 'start_date' && currentExperience.end_date && new Date(value) > new Date(currentExperience.end_date)) {
+      currentExperience.end_date = '';
+    }
+
+    if (field === 'pay_min' || field === 'pay_max') {
+      const payMin = field === 'pay_min' ? value : currentExperience.pay_min;
+      const payMax = field === 'pay_max' ? value : currentExperience.pay_max;
+      const prevPayMin = payRateInputsRef.current[index]?.pay_min;
+      const prevPayMax = payRateInputsRef.current[index]?.pay_max;
+
+      if (payMin && payMax && parseFloat(payMin) > parseFloat(payMax)) {
+        if (field === 'pay_min' && value !== prevPayMin) {
+            currentExperience.pay_max = payMin;
+        } else if (field === 'pay_max' && value !== prevPayMax) {
+            currentExperience.pay_min = payMax;
+        }
+      }
+      payRateInputsRef.current[index] = { pay_min: currentExperience.pay_min, pay_max: currentExperience.pay_max };
+    }
+
+    updatedExperiences[index] = currentExperience;
     setExperiences(updatedExperiences);
+
     if (errors[index] && errors[index][field]) {
         const updatedErrors = [...errors];
         delete updatedErrors[index][field];
@@ -86,6 +120,10 @@ const JobExperience = () => {
       if (!exp.industry.trim()) { expErrors.industry = "Industry is required."; isValid = false; }
       if (!exp.job_title.trim()) { expErrors.job_title = "Job title is required."; isValid = false; }
       if (!exp.start_date) { expErrors.start_date = "Start date is required."; isValid = false; }
+      if (exp.start_date && exp.end_date && new Date(exp.start_date) > new Date(exp.end_date)) {
+        expErrors.end_date = "End date cannot be earlier than start date.";
+        isValid = false;
+      }
       return expErrors;
     });
     setErrors(newErrors);
@@ -135,7 +173,16 @@ const JobExperience = () => {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label>Industry</Label>
-                    <Input value={exp.industry} onChange={e => handleExperienceChange(index, 'industry', e.target.value)} className={errors[index]?.industry ? "border-red-500" : ""} />
+                    <Select value={exp.industry} onValueChange={value => handleExperienceChange(index, 'industry', value)}>
+                        <SelectTrigger className={errors[index]?.industry ? "border-red-500" : ""}>
+                            <SelectValue placeholder="Select an industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {industries.map(industry => (
+                            <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     {errors[index]?.industry && <p className="text-sm text-red-500">{errors[index]?.industry}</p>}
                 </div>
                 <div className="space-y-2">
@@ -166,7 +213,8 @@ const JobExperience = () => {
                 </div>
                 <div className="space-y-2">
                     <Label>End Date</Label>
-                    <Input type="date" value={exp.end_date} onChange={e => handleExperienceChange(index, 'end_date', e.target.value)} />
+                    <Input type="date" value={exp.end_date} onChange={e => handleExperienceChange(index, 'end_date', e.target.value)} min={exp.start_date} className={errors[index]?.end_date ? "border-red-500" : ""} />
+                    {errors[index]?.end_date && <p className="text-sm text-red-500">{errors[index]?.end_date}</p>}
                 </div>
             </div>
              <div className="space-y-2">

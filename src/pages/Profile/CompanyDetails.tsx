@@ -36,8 +36,11 @@ const CompanyDetailsRecruiter = () => {
   });
   const [errors, setErrors] = useState<any>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [maxDate, setMaxDate] = useState('');
 
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setMaxDate(today);
     if (user && user.recruiter) {
       const { recruiter } = user;
       setFormData({
@@ -91,7 +94,16 @@ const CompanyDetailsRecruiter = () => {
           });
         })
         .catch(error => {
-          const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+          let errorMessage = "An unexpected error occurred.";
+          if (error.response?.data?.errors) {
+            const fieldErrors = Object.values(error.response.data.errors)[0];
+            if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+              errorMessage = fieldErrors[0];
+            }
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          }
+
           toast({
             title: "Error",
             description: errorMessage,
@@ -139,7 +151,7 @@ const CompanyDetailsRecruiter = () => {
 
         <div className="space-y-2">
           <Label htmlFor="company-reg-date">Company Registration Date</Label>
-          <Input id="company-reg-date" type="date" value={formData.company_reg_date} onChange={(e) => handleInputChange("company_reg_date", e.target.value)} />
+          <Input id="company-reg-date" type="date" value={formData.company_reg_date} onChange={(e) => handleInputChange("company_reg_date", e.target.value)} max={maxDate} />
           {errors.company_reg_date && <p className="text-red-500 text-xs">{errors.company_reg_date}</p>}
         </div>
 

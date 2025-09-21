@@ -1,41 +1,46 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UploadCloud, FileText, Download, Trash2 } from "lucide-react";
+import { UploadCloud, FileText, Download, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/stores/authStore";
-import { uploadBase64Image, saveJobSeekerDocument, getJobSeekerDocuments } from "@/services/documentService";
+import { uploadFileAsBase64 } from "@/services/fileService";
+import { 
+    getJobSeekerDocuments, 
+    saveJobSeekerDocument, 
+    deleteJobSeekerDocument
+} from "@/services/jobSeekerService";
+import { 
+    getRecruiterDocuments, 
+    saveRecruiterDocument, 
+    deleteRecruiterDocument
+} from "@/services/recruiterService";
 
 const DocumentItem = ({ doc, onDelete }) => {
   const getStatusClasses = (variant) => {
     switch (variant) {
-      case 'green':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'yellow':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'blue':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'verified': return 'bg-green-100 text-green-700 border-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  // Clean up URL by removing double slashes after the protocol
-  const cleanedUrl = doc.file_path.replace(/([^:]\/)\/+/g, "$1");
+  const cleanedUrl = doc.file_path ? doc.file_path.replace(/([^:]\/)\/+/g, "$1") : "";
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
       <div className="flex items-start gap-4">
         <FileText className="h-6 w-6 text-gray-400 mt-1 flex-shrink-0" />
         <div>
-          <p className="font-semibold">{doc.document_name}</p>
+          <p className="font-semibold">{doc.doc_name || doc.document_name}</p>
           <p className="text-sm text-gray-500">Uploaded: {new Date(doc.created_at).toLocaleDateString()}</p>
         </div>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0 self-end sm:self-center">
-        <Badge variant="outline" className={getStatusClasses(doc.statusVariant)}>{doc.status || 'Pending'}</Badge>
-        <Button variant="outline" size="sm" onClick={() => window.open(cleanedUrl, '_blank')}>
+       
+        <Button variant="outline" size="sm" onClick={() => window.open(cleanedUrl, '_blank')} disabled={!cleanedUrl}>
             <Download className="mr-2 h-4 w-4" />
             Download
         </Button>
@@ -47,19 +52,26 @@ const DocumentItem = ({ doc, onDelete }) => {
   );
 };
 
-const DocumentsAndCertificates = () => {
+const DocumentManagement = () => {
   const { toast } = useToast();
   const user = useUser();
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const isJobSeeker = user?.role === 'job_seeker';
+  const entityId = isJobSeeker ? user?.job_seeker?.id : user?.recruiter?.id;
 
-  const fetchDocuments = () => {
-    if (user && user.job_seeker) {
+  const getDocuments = isJobSeeker ? getJobSeekerDocuments : getRecruiterDocuments;
+  const deleteDocument = isJobSeeker ? deleteJobSeekerDocument : deleteRecruiterDocument;
+
+  const fetchDocuments = useCallback(() => {
+    if (entityId) {
       setIsLoading(true);
-      getJobSeekerDocuments(user.job_seeker.id)
+      getDocuments(entityId)
         .then(response => {
-          setDocuments(response.data.data);
+          setDocuments(response.data.data || []);
         })
         .catch(() => {
           toast({ title: "Error", description: "Failed to fetch documents.", variant: "destructive" });
@@ -68,55 +80,61 @@ const DocumentsAndCertificates = () => {
           setIsLoading(false);
         });
     }
-  };
+  }, [entityId, toast, getDocuments]);
 
   useEffect(() => {
     fetchDocuments();
-  }, [user, toast]);
+  }, [fetchDocuments]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        handleFileUpload(file.name, base64);
-      };
-      reader.onerror = () => {
-        toast({ title: "Error", description: "Failed to read file.", variant: "destructive" });
-      };
+      handleFileUpload(file);
     }
   };
 
-  const handleFileUpload = (doc_name: string, base64: string) => {
-    if (user && user.job_seeker) {
-      setIsLoading(true);
-      uploadBase64Image(base64)
-        .then(uploadResponse => {
-          const imageUrl = uploadResponse.data.image_url; // Correctly use image_url
-          saveJobSeekerDocument(user.job_seeker.id, doc_name, imageUrl)
-            .then(() => {
-              toast({ title: "Success", description: "Document uploaded successfully." });
-              fetchDocuments(); // Refresh the document list
-            })
-            .catch(() => {
-              toast({ title: "Error", description: "Failed to save document.", variant: "destructive" });
-            });
-        })
-        .catch(() => {
-          toast({ title: "Error", description: "Failed to upload file.", variant: "destructive" });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+  const handleFileUpload = async (file: File) => {
+    if (!entityId) return;
+
+    setIsUploading(true);
+
+    try {
+      const filePath = await uploadFileAsBase64(file);
+
+      const payload = {
+        doc_name: file.name,
+        file: filePath,
+      };
+
+      if (isJobSeeker) {
+        await saveJobSeekerDocument({ ...payload, jobseeker_id: entityId });
+      } else {
+        await saveRecruiterDocument({ ...payload, recruiter_id: entityId });
+      }
+
+      toast({ title: "Success", description: "Document uploaded successfully." });
+      fetchDocuments(); // Refresh list
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to save document.", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+       if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   const handleDelete = (docId: number) => {
-    // Implement delete functionality here if the API is available
-    console.log("Delete document with ID:", docId);
-    toast({ title: "Info", description: "Delete functionality not yet implemented." });
+    if (entityId) {
+      deleteDocument(docId)
+        .then(() => {
+          toast({ title: "Success", description: "Document removed." });
+          fetchDocuments();
+        })
+        .catch(() => {
+          toast({ title: "Error", description: "Failed to remove document.", variant: "destructive" });
+        });
+    }
   };
 
   return (
@@ -132,28 +150,32 @@ const DocumentsAndCertificates = () => {
         onChange={handleFileSelect}
         className="hidden"
         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        disabled={isUploading}
       />
       <div 
-        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center space-y-2 cursor-pointer hover:bg-gray-50"
-        onClick={() => fileInputRef.current?.click()}
+        className={`border-2 border-dashed border-gray-300 rounded-lg p-8 text-center space-y-2 ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
       >
-        <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="text-lg font-semibold">Upload Documents</h3>
+        {isUploading ? <Loader2 className="mx-auto h-12 w-12 text-gray-400 animate-spin"/> : <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />}
+        <h3 className="text-lg font-semibold">{isUploading ? 'Uploading...' : 'Upload Documents'}</h3>
         <p className="text-gray-500">Click to browse or drag and drop your files here</p>
         <p className="text-xs text-gray-400">Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 15MB per file)</p>
       </div>
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-purple-700">Uploaded Documents</h3>
-        {isLoading && <p>Loading...</p>}
-        <div className="space-y-4">
-          {documents.map((doc) => (
-            <DocumentItem key={doc.id} doc={doc} onDelete={handleDelete} />
-          ))}
-        </div>
+        {isLoading ? <p>Loading...</p> : documents.length > 0 ? (
+            <div className="space-y-4">
+            {documents.map((doc) => (
+                <DocumentItem key={doc.id} doc={doc} onDelete={handleDelete} />
+            ))}
+            </div>
+        ) : (
+            <p className="text-center text-muted-foreground py-4">No documents uploaded yet.</p>
+        )}
       </div>
     </div>
   );
 };
 
-export default DocumentsAndCertificates;
+export default DocumentManagement;

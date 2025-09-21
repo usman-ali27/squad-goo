@@ -1,16 +1,18 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Save, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/stores/authStore";
 import { getJobSeekerPreferences, saveJobSeekerPreferences, Preference, PreferencePayload } from "@/services/preferenceService";
 import { AnimatePresence, motion } from "framer-motion";
+import { industries } from "@/constants/industries";
 
 const JobPreferences = () => {
   const { toast } = useToast();
@@ -19,6 +21,7 @@ const JobPreferences = () => {
   const [errors, setErrors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const payRateInputsRef = useRef<Record<string, { pay_min: number; pay_max: number }>>({});
 
   const availabilityDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const offerTypes = ["Manual", "Quick"];
@@ -30,16 +33,18 @@ const JobPreferences = () => {
     try {
       const response = await getJobSeekerPreferences(user.job_seeker.id);
       if (response.data && response.data.data.length > 0) {
-        const fetchedPreferences = response.data.data.map((pref: any) => ({
-          ...pref,
-          pay_min: parseFloat(pref.pay_min) || 0,
-          pay_max: parseFloat(pref.pay_max) || 0,
-          days: pref.days ? JSON.parse(pref.days) : [],
-          offer_types: pref.offer_types ? JSON.parse(pref.offer_types) : [],
-        }));
+        const fetchedPreferences = response.data.data.map((pref: any, index: number) => {
+          payRateInputsRef.current[index] = { pay_min: parseFloat(pref.pay_min) || 0, pay_max: parseFloat(pref.pay_max) || 0 };
+          return {
+            ...pref,
+            pay_min: parseFloat(pref.pay_min) || 0,
+            pay_max: parseFloat(pref.pay_max) || 0,
+            days: pref.days ? JSON.parse(pref.days) : [],
+            offer_types: pref.offer_types ? JSON.parse(pref.offer_types) : [],
+          };
+        });
         setPreferences(fetchedPreferences);
       } else {
-        // If no preferences are found, start with one empty card
         handleAddPreference();
       }
     } catch (error) {
@@ -48,7 +53,6 @@ const JobPreferences = () => {
         description: "Could not load your job preferences. Please try again later.",
         variant: "destructive",
       });
-      // Still add an initial card on error to allow user to create one
       handleAddPreference();
     } finally {
       setIsFetching(false);
@@ -61,6 +65,7 @@ const JobPreferences = () => {
 
 
   const handleAddPreference = () => {
+    const newIndex = preferences.length;
     const newPreference: Preference = {
       industry: '',
       job_title: '',
@@ -75,16 +80,38 @@ const JobPreferences = () => {
     };
     setPreferences(prev => [...prev, newPreference]);
     setErrors(prev => [...prev, {}]);
+    payRateInputsRef.current[newIndex] = { pay_min: 0, pay_max: 0 };
   };
 
   const handleRemovePreference = (index: number) => {
     setPreferences(prev => prev.filter((_, i) => i !== index));
     setErrors(prev => prev.filter((_, i) => i !== index));
+    const newPayRateInputs = { ...payRateInputsRef.current };
+    delete newPayRateInputs[index];
+    payRateInputsRef.current = newPayRateInputs;
   };
 
   const handleChange = (index: number, field: keyof Preference, value: any) => {
     const newPreferences = [...preferences];
-    (newPreferences[index] as any)[field] = value;
+    const currentPreference = { ...newPreferences[index], [field]: value };
+
+    if (field === 'pay_min' || field === 'pay_max') {
+      const payMin = field === 'pay_min' ? value : currentPreference.pay_min;
+      const payMax = field === 'pay_max' ? value : currentPreference.pay_max;
+      const prevPayMin = payRateInputsRef.current[index]?.pay_min;
+      const prevPayMax = payRateInputsRef.current[index]?.pay_max;
+
+      if (payMin && payMax && parseFloat(payMin) > parseFloat(payMax)) {
+        if (field === 'pay_min' && value !== prevPayMin) {
+            currentPreference.pay_max = payMin;
+        } else if (field === 'pay_max' && value !== prevPayMax) {
+            currentPreference.pay_min = payMax;
+        }
+      }
+      payRateInputsRef.current[index] = { pay_min: currentPreference.pay_min, pay_max: currentPreference.pay_max };
+    }
+    
+    (newPreferences[index] as any) = currentPreference;
     setPreferences(newPreferences);
   };
 
@@ -186,14 +213,6 @@ const JobPreferences = () => {
 
 
   return (
-    // <Card>
-    //   <CardContent>
-    //     <div className="space-y-6">
-    //       
-    //     </div>
-    //   </CardContent>
-    // </Card>
-
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Job Preferences</h2>
@@ -268,7 +287,16 @@ const PreferenceCard: React.FC<PreferenceCardProps> = ({ preference, index, onCh
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label htmlFor={`industry-${index}`}>Industry</Label>
-        <Input id={`industry-${index}`} value={preference.industry} onChange={e => onChange(index, 'industry', e.target.value)} />
+        <Select value={preference.industry} onValueChange={value => onChange(index, 'industry', value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select an industry" />
+          </SelectTrigger>
+          <SelectContent>
+            {industries.map(industry => (
+              <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {errors.industry && <p className="text-sm text-destructive">{errors.industry}</p>}
       </div>
       <div className="space-y-2">

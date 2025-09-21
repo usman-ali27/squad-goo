@@ -7,12 +7,24 @@ import { Info, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useAuthActions } from "@/stores/authStore";
 import { updateTaxInformation, TaxInformationPayload } from "@/services/jobSeekerService";
+import { z } from "zod";
+
+const taxSchema = z.object({
+    tfn: z.string().refine(val => val.length === 0 || (val.length === 9 && /^\d+$/.test(val)), {
+        message: "TFN must be 9 digits.",
+    }),
+    abn: z.string().refine(val => val.length === 0 || (val.length === 11 && /^\d+$/.test(val)), {
+        message: "ABN must be 11 digits.",
+    }),
+    trs: z.string(),
+});
 
 const TaxInformation = () => {
     const { toast } = useToast();
     const user = useUser();
     const { updateJobSeeker } = useAuthActions();
     const [taxInfo, setTaxInfo] = useState<Omit<TaxInformationPayload, 'id'>>({});
+    const [errors, setErrors] = useState<any>({});
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -28,15 +40,45 @@ const TaxInformation = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setTaxInfo(prev => ({ ...prev, [id]: value }));
+        if (errors[id]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[id];
+                return newErrors;
+            });
+        }
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        const validationResult = taxSchema.safeParse({
+            tfn: taxInfo.tfn || '',
+            abn: taxInfo.abn || '',
+            trs: taxInfo.trs || '',
+        });
+
+        if (!validationResult.success) {
+            const newErrors: any = {};
+            for (const error of validationResult.error.errors) {
+                newErrors[error.path[0]] = error.message;
+            }
+            setErrors(newErrors);
+            toast({
+                title: "Validation Error",
+                description: "Please correct the errors and try again.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setErrors({});
+
         if (user && user.job_seeker) {
             setIsLoading(true);
-            const payload: TaxInformationPayload = { ...taxInfo, id: user.job_seeker.id };
+            const payload: TaxInformationPayload = { ...validationResult.data, id: user.job_seeker.id };
             updateTaxInformation(payload)
-                .then(response => {
+                .then(() => {
                     toast({ title: "Success", description: "Tax information saved successfully." });
                     if (user && user.job_seeker) {
                         const updatedJobSeeker = { ...user.job_seeker, ...taxInfo };
@@ -54,8 +96,8 @@ const TaxInformation = () => {
     };
 
     const taxFields = [
-        { id: "tfn", label: "TFN", placeholder: "Your TFN" },
-        { id: "abn", label: "ABN", placeholder: "Your ABN" },
+        { id: "tfn", label: "TFN", placeholder: "Your 9-digit TFN" },
+        { id: "abn", label: "ABN", placeholder: "Your 11-digit ABN" },
         { id: "trs", label: "TRS", placeholder: "Your TRS" },
     ];
 
@@ -82,6 +124,7 @@ const TaxInformation = () => {
                             placeholder={field.placeholder}
                             value={taxInfo[field.id as keyof Omit<TaxInformationPayload, 'id'>] || ''}
                             onChange={handleChange} />
+                        {errors[field.id] && <p className="text-sm text-red-500 mt-1">{errors[field.id]}</p>}
                     </div>
                 ))}
 

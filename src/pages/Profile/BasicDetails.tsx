@@ -23,6 +23,11 @@ const BasicDetails = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [bioWordCount, setBioWordCount] = useState(0);
+
+  const countWords = (text: string) => {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  };
 
   useEffect(() => {
     if (user && user.job_seeker) {
@@ -30,13 +35,15 @@ const BasicDetails = () => {
       getJobSeekerProfile(user.job_seeker.id)
         .then(response => {
           const { first_name, last_name, dob, address, bio } = response.data.data;
+          const initialBio = bio || "";
           setFormData({
             first_name: first_name || "",
             last_name: last_name || "",
             dob: dob || "",
             address: address || "",
-            bio: bio || "",
+            bio: initialBio,
           });
+          setBioWordCount(countWords(initialBio));
         })
         .catch(() => {
           toast({
@@ -52,6 +59,19 @@ const BasicDetails = () => {
   }, [user, toast]);
 
   const handleInputChange = (field: string, value: string) => {
+    if (field === 'bio') {
+      const words = value.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 400) {
+        value = words.slice(0, 400).join(' ');
+        toast({
+            title: "Word limit reached",
+            description: "You cannot enter more than 400 words.",
+            variant: "destructive",
+        });
+      }
+      setBioWordCount(countWords(value));
+    }
+
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
@@ -60,11 +80,24 @@ const BasicDetails = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     if (!formData.first_name.trim()) newErrors.first_name = "First name is required";
     if (!formData.last_name.trim()) newErrors.last_name = "Last name is required";
-    if (!formData.dob) newErrors.dob = "Date of birth is required";
+    if (!formData.dob) {
+        newErrors.dob = "Date of birth is required";
+    } else {
+        const dobDate = new Date(formData.dob);
+        const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        if (dobDate > today) {
+            newErrors.dob = "Date of birth cannot be in the future";
+        } else if (dobDate > eighteenYearsAgo) {
+            newErrors.dob = "You must be at least 18 years old";
+        }
+    }
     if (!formData.address.trim()) newErrors.address = "Address is required";
+    if (countWords(formData.bio) > 400) newErrors.bio = "Bio cannot exceed 400 words.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -147,7 +180,7 @@ const BasicDetails = () => {
 
           <div className="space-y-2">
             <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Input id="dateOfBirth" type="date" value={formData.dob} onChange={e => handleInputChange("dob", e.target.value)} className={errors.dob ? "border-red-500" : ""} />
+            <Input id="dateOfBirth" type="date" max={new Date().toISOString().split("T")[0]} value={formData.dob} onChange={e => handleInputChange("dob", e.target.value)} className={errors.dob ? "border-red-500" : ""} />
             {errors.dob && <p className="text-sm text-red-500">{errors.dob}</p>}
             {/* <p className="text-xs text-red-500">Cannot be changed after KYC Verification</p> */}
           </div>
@@ -160,8 +193,14 @@ const BasicDetails = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio <span className="text-muted-foreground">(Maximum 400 words)</span></Label>
-            <Textarea id="bio" rows={4} value={formData.bio} onChange={e => handleInputChange("bio", e.target.value)} className="resize-none" />
+            <div className="flex justify-between items-center">
+                <Label htmlFor="bio">Bio</Label>
+                <span className={`text-xs ${bioWordCount > 400 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                    {bioWordCount}/400 words
+                </span>
+            </div>
+            <Textarea id="bio" rows={4} value={formData.bio} onChange={e => handleInputChange("bio", e.target.value)} className={`resize-none ${errors.bio ? 'border-red-500' : ''}`} />
+            {errors.bio && <p className="text-sm text-red-500">{errors.bio}</p>}
             <p className="text-xs text-muted-foreground">Appears on your profile card</p>
           </div>
 

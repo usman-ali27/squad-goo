@@ -11,8 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useAuthActions } from '@/stores/authStore';
 import { useRef, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { uploadProfilePicture } from '@/services/jobSeekerService';
-import { getProfile } from '@/services/profileService';
+import { getProfile, uploadProfilePicture } from '@/services/profileService';
 import { ProfileDataContext } from '@/contexts/ProfileDataContext';
 
 const recruiterNavItems = [
@@ -102,8 +101,29 @@ const ProfileLayout = () => {
     return <div>Loading user profile...</div>;
   }
   
+  const getDisplayName = () => {
+    if (!profileData) return user.name;
+
+    const roleData = profileData[user.role];
+    if (roleData) {
+      if (roleData.first_name && roleData.last_name) {
+        return `${roleData.first_name} ${roleData.last_name}`;
+      }
+      if (roleData.company_name) {
+        return roleData.company_name;
+      }
+    }
+    
+    return user.name;
+  };
+
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (!name) return "";
+    const nameParts = name.trim().split(/\s+/);
+    if (nameParts.length > 1) {
+        return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+    }
+    return nameParts[0].substring(0, 2).toUpperCase();
   };
 
   const handleAvatarClick = () => {
@@ -112,10 +132,10 @@ const ProfileLayout = () => {
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (file && user?.job_seeker?.user_id) {
+      if (file && user && user.id && user.role) {
           setIsUploading(true);
           try {
-              const response = await uploadProfilePicture(user.job_seeker?.user_id, file);
+              const response = await uploadProfilePicture(user.role, user.id, file);
               const newImageUrl = response.data.url;
               updateUser({ profile_picture: newImageUrl });
               toast({ title: "Success", description: "Profile picture updated successfully." });
@@ -143,6 +163,7 @@ const ProfileLayout = () => {
   }
 
   const userPhone = user.role === 'job_seeker' ? user.job_seeker?.phone : null;
+  const displayName = getDisplayName();
 
   return (
     <ProfileDataContext.Provider value={profileData}>
@@ -158,9 +179,9 @@ const ProfileLayout = () => {
               <div className="relative">
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                 <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-xl">
-                  <AvatarImage src={user.profile_picture || '/placeholder.svg'} alt={user.name} />
+                  <AvatarImage src={user.profile_picture || '/placeholder.svg'} alt={displayName} />
                   <AvatarFallback className="text-xl sm:text-2xl bg-white text-orange-600 font-bold">
-                    {getInitials(user.name)}
+                    {getInitials(displayName)}
                   </AvatarFallback>
                 </Avatar>
                 <Button size="icon" onClick={handleAvatarClick} className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100" disabled={isUploading}>
@@ -171,7 +192,7 @@ const ProfileLayout = () => {
               {/* Profile Info */}
               <div className="flex-1 space-y-2 text-center lg:text-left">
                 {/* Name */}
-                <h1 className="text-2xl sm:text-3xl font-bold">{user.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{displayName}</h1>
 
                 {/* Info Row */}
                 <div className="flex flex-col lg:flex-row lg:justify-between gap-6">

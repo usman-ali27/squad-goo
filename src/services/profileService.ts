@@ -51,3 +51,21 @@ export const saveSocialMediaLinks = (role: string, payload: SocialMediaLinksPayl
     }
     return apiClient.post(`/api/${apiRole}/social`, payload);
 };
+
+export const uploadProfilePicture = (role: string, userId: number, file: File) => {
+  let apiRole = role;
+  if (role === 'job_seeker') {
+      apiRole = 'jobseeker';
+  }
+  
+  const formData = new FormData();
+  formData.append('user_id', userId.toString());
+  formData.append('profile_picture', file);
+
+  return apiClient.post(`/api/${apiRole}/profile_picture`, formData, {
+      headers: {
+          'Content-Type': 'multipart/form-data',
+      },
+  });
+};
+

@@ -1,5 +1,8 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -47,66 +50,74 @@ const queryClient = new QueryClient({
   },
 });
 
+const router = createBrowserRouter([
+  { path: "/login", element: <Login /> },
+  { path: "/register", element: <Register /> },
+  { path: "/forgot-password", element: <ForgotPassword /> },
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      { index: true, element: <HomePage /> },
+      {
+        path: "profile",
+        element: <ProfileLayout />,
+        children: [
+          { index: true, element: <BasicDetails /> },
+          { path: "company", element: <CompanyDetails /> },
+          { path: "experience", element: <JobExperience /> },
+          { path: "preferences", element: <JobPreferences /> },
+          { path: "education", element: <Education /> },
+          { path: "tax", element: <TaxInformation /> },
+          { path: "social", element: <SocialMediaLinks /> },
+          { path: "kyc", element: <KYCVerification /> },
+          { path: "documents", element: <Documents /> },
+        ],
+      },
+      {
+        path: "about",
+        element: <div className="p-8 min-h-screen flex items-center justify-center">About Us - Coming Soon</div>,
+      },
+      {
+        path: "contact",
+        element: <div className="p-8 min-h-screen flex items-center justify-center">Contact Us - Coming Soon</div>,
+      },
+    ],
+  },
+  {
+    element: <PrivateRoute />,
+    children: [
+      {
+        path: "/dashboard",
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <DashboardHome /> },
+          { path: "find-jobs", element: <div className="p-8 text-center">Find Jobs Page Coming Soon</div> },
+          { path: "find-staff", element: <div className="p-8 text-center">Find Staff Page Coming Soon</div> },
+          { path: "job-pool", element: <div className="p-8 text-center">Job Pool Page Coming Soon</div> },
+          { path: "applications", element: <div className="p-8 text-center">Applications Page Coming Soon</div> },
+          { path: "candidates", element: <div className="p-8 text-center">Candidates Page Coming Soon</div> },
+          { path: "messages", element: <div className="p-8 text-center">Messages Page Coming Soon</div> },
+          { path: "wallet", element: <div className="p-8 text-center">Wallet Page Coming Soon</div> },
+          { path: "settings", element: <Settings /> },
+          { path: "upgrades", element: <AccountUpgrades /> },
+          { path: "support", element: <Support /> },
+        ],
+      },
+    ],
+  },
+  { path: "*", element: <NotFound /> },
+]);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <BrowserRouter>
-          <Suspense fallback={<LoadingSpinner text="Loading..." />}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              
-              {/* Protected routes with layout */}
-              <Route path="/" element={<Layout />}>
-                <Route index element={<HomePage />} />
-                
-                {/* Profile routes */}
-                {/* <Route element={<PrivateRoute />}> */}
-                  <Route path="profile" element={<ProfileLayout />}>
-                    <Route index element={<BasicDetails />} />
-                    <Route path="company" element={<CompanyDetails />} />
-                    <Route path="experience" element={<JobExperience />} />
-                    <Route path="preferences" element={<JobPreferences />} />
-                    <Route path="education" element={<Education />} />
-                    <Route path="tax" element={<TaxInformation />} />
-                    <Route path="social" element={<SocialMediaLinks />} />
-                    <Route path="kyc" element={<KYCVerification />} />
-                    <Route path="documents" element={<Documents />} />
-                  </Route>
-                {/* </Route> */}
-                
-                {/* Other main routes */}
-                <Route path="about" element={<div className="p-8 min-h-screen flex items-center justify-center">About Us - Coming Soon</div>} />
-                <Route path="contact" element={<div className="p-8 min-h-screen flex items-center justify-center">Contact Us - Coming Soon</div>} />
-              </Route>
-
-              {/* Dashboard section with nested routes */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/dashboard" element={<DashboardLayout />}>
-                  <Route index element={<DashboardHome />} />
-                  <Route path="find-jobs" element={<div className="p-8 text-center">Find Jobs Page Coming Soon</div>} />
-                  <Route path="find-staff" element={<div className="p-8 text-center">Find Staff Page Coming Soon</div>} />
-                  <Route path="job-pool" element={<div className="p-8 text-center">Job Pool Page Coming Soon</div>} />
-                  <Route path="applications" element={<div className="p-8 text-center">Applications Page Coming Soon</div>} />
-                  <Route path="candidates" element={<div className="p-8 text-center">Candidates Page Coming Soon</div>} />
-                  <Route path="messages" element={<div className="p-8 text-center">Messages Page Coming Soon</div>} />
-                  <Route path="wallet" element={<div className="p-8 text-center">Wallet Page Coming Soon</div>} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="upgrades" element={<AccountUpgrades />} />
-                  <Route path="support" element={<Support />} />
-                </Route>
-              </Route>
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+        <Suspense fallback={<LoadingSpinner text="Loading..." />}>
+          <RouterProvider router={router} />
+        </Suspense>
       </ErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>

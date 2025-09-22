@@ -129,7 +129,11 @@ const Register = () => {
       startEmailResendTimer();
       toast({ title: "Verification Code Sent", description: "A code has been sent to your email address." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.response?.data?.message || "Failed to send email verification code.", variant: "destructive" });
+      if (error.message === "Email already exist") {
+        toast({ title: "Email Already Exists", description: "This email is already registered. Please use a different email or log in.", variant: "destructive" });
+      } else {
+        toast({ title: "Error", description: error.message || "Failed to send email verification code.", variant: "destructive" });
+      }
     } finally {
       setIsSendingEmailCode(false);
     }
@@ -146,7 +150,7 @@ const Register = () => {
       setIsEmailVerified(true);
       toast({ title: "Email Verified", description: "Your email has been successfully verified.", variant: "default" });
     } catch (error: any) {
-      toast({ title: "Error", description: error.response?.data?.message || "Invalid email verification code.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Invalid email verification code.", variant: "destructive" });
     } finally {
       setIsVerifyingEmailCode(false);
     }
@@ -165,7 +169,7 @@ const Register = () => {
       startPhoneResendTimer();
       toast({ title: "Verification Code Sent", description: "A code has been sent to your phone number." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.response?.data?.message || "Failed to send phone verification code.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to send phone verification code.", variant: "destructive" });
     } finally {
       setIsSendingPhoneCode(false);
     }
@@ -183,7 +187,7 @@ const Register = () => {
       setIsPhoneVerified(true);
       toast({ title: "Phone Verified", description: "Your phone number has been successfully verified.", variant: "default" });
     } catch (error: any) {
-      toast({ title: "Error", description: error.response?.data?.message || "Invalid phone verification code.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Invalid phone verification code.", variant: "destructive" });
     } finally {
       setIsVerifyingPhoneCode(false);
     }
@@ -236,16 +240,17 @@ const Register = () => {
       toast({ title: "Registration Successful", description: "Welcome! You can now log in.", variant: "default" });
       navigate("/login");
     } catch (error: any) {
-      const errors = error.response?.data?.errors;
-      let errorMessage = error.response?.data?.message || "An unexpected error occurred.";
-      if (errors) errorMessage = Object.values(errors).flat().join("\n");
-      toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
-      if (errors?.email) {
+      let errorMessage = error.message || "An unexpected error occurred.";
+      if (errorMessage === "Email already exist") {
+        errorMessage = "This email is already registered. Please use a different email or log in.";
         setIsEmailVerified(false);
         setEmailVerificationSent(false);
         setEmailVerificationCode("");
       }
-      if (errors?.phone) {
+
+      toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
+
+      if (error.response?.data?.errors?.phone) {
         setIsPhoneVerified(false);
         setPhoneVerificationSent(false);
         setPhoneVerificationCode("");
@@ -310,7 +315,7 @@ const Register = () => {
                 </div>
                 <AnimatePresence>
                   {phoneVerificationSent && !isPhoneVerified && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2">
                       <Label htmlFor="phoneVerificationCode">Phone Verification Code</Label>
                       <div className="relative">
                         <Input id="phoneVerificationCode" placeholder="Enter 6-digit code" value={phoneVerificationCode} onChange={(e) => setPhoneVerificationCode(e.target.value)} className="bg-gray-50" />
@@ -346,7 +351,7 @@ const Register = () => {
                 </div>
                 <AnimatePresence>
                   {emailVerificationSent && !isEmailVerified && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2">
                       <Label htmlFor="emailVerificationCode">Email Verification Code</Label>
                       <div className="relative">
                         <Input id="emailVerificationCode" placeholder="Enter 6-digit code" value={emailVerificationCode} onChange={(e) => setEmailVerificationCode(e.target.value)} className="bg-gray-50" />

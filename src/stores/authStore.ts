@@ -93,17 +93,40 @@ export interface Recruiter {
     linkedin: string | null;
 }
 
+export interface Individual {
+  id: number;
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address?: string | null;
+  bio?: string | null;
+  kyc_verified: 0 | 1;
+  tfn?: string | null;
+  abn?: string | null;
+  trs?: string | null;
+  facebook?: string | null;
+  twitter?: string | null;
+  instagram?: string | null;
+  linkedin?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: number;
   name: string;
   profile_picture?: string | null;
   email: string;
   email_verified_at?: string | null;
-  role: "job_seeker" | "recruiter";
+  role: "job_seeker" | "recruiter" | "individual";
   created_at: string;
   updated_at: string;
   job_seeker?: JobSeeker;
   recruiter?: Recruiter;
+  individual?: Individual;
 }
 
 interface AuthState {
@@ -114,7 +137,8 @@ interface AuthState {
     login: (userData: User, token: string, rememberMe: boolean) => void;
     logout: () => void;
     updateJobSeeker: (jobSeekerData: JobSeeker) => void;
-    updateRecruiter: (recruiterData: Recruiter) => void; // Added this line
+    updateRecruiter: (recruiterData: Recruiter) => void;
+    updateIndividual: (individualData: Individual) => void;
     updateUser: (userData: Partial<User>) => void;
   };
 }
@@ -169,6 +193,17 @@ const useAuthStore = create<AuthState>((set, get) => ({
         const { user, token } = get();
         if (user) {
             const updatedUser = { ...user, recruiter: recruiterData };
+            const rememberMe = !!localStorage.getItem('auth-storage');
+            const storage = rememberMe ? localStorage : sessionStorage;
+            const stateToPersist = { user: updatedUser, token };
+            storage.setItem('auth-storage', JSON.stringify({ state: stateToPersist, version: 0 }));
+            set({ user: updatedUser });
+        }
+    },
+    updateIndividual: (individualData) => {
+        const { user, token } = get();
+        if (user) {
+            const updatedUser = { ...user, individual: individualData };
             const rememberMe = !!localStorage.getItem('auth-storage');
             const storage = rememberMe ? localStorage : sessionStorage;
             const stateToPersist = { user: updatedUser, token };

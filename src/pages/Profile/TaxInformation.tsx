@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Info, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUser, useAuthActions } from "@/stores/authStore";
-import { updateTaxInformation, TaxInformationPayload } from "@/services/jobSeekerService";
+import { useUser, useAuthActions, JobSeeker, Recruiter, Individual } from "@/stores/authStore";
+import { updateTaxInformation, TaxInformationPayload } from "@/services/profileService";
 import { z } from "zod";
 
 const taxSchema = z.object({
@@ -22,18 +22,31 @@ const taxSchema = z.object({
 const TaxInformation = () => {
     const { toast } = useToast();
     const user = useUser();
-    const { updateJobSeeker } = useAuthActions();
+    const { updateJobSeeker, updateRecruiter, updateIndividual } = useAuthActions();
     const [taxInfo, setTaxInfo] = useState<Omit<TaxInformationPayload, 'id'>>({});
     const [errors, setErrors] = useState<any>({});
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (user && user.job_seeker) {
-            setTaxInfo({
-                tfn: user.job_seeker.tfn,
-                abn: user.job_seeker.abn,
-                trs: user.job_seeker.trs,
-            });
+        if (user) {
+            const { role, job_seeker, recruiter, individual } = user;
+            let user_details: JobSeeker | Recruiter | Individual | undefined;
+
+            if (role === 'job_seeker') {
+                user_details = job_seeker;
+            } else if (role === 'recruiter') {
+                user_details = recruiter;
+            } else if (role === 'individual') {
+                user_details = individual;
+            }
+
+            if (user_details) {
+                setTaxInfo({
+                    tfn: user_details.tfn,
+                    abn: user_details.abn,
+                    trs: user_details.trs,
+                });
+            }
         }
     }, [user]);
 
@@ -74,24 +87,42 @@ const TaxInformation = () => {
 
         setErrors({});
 
-        if (user && user.job_seeker) {
-            setIsLoading(true);
-            const payload: TaxInformationPayload = { ...validationResult.data, id: user.job_seeker.id };
-            updateTaxInformation(payload)
-                .then(() => {
-                    toast({ title: "Success", description: "Tax information saved successfully." });
-                    if (user && user.job_seeker) {
-                        const updatedJobSeeker = { ...user.job_seeker, ...taxInfo };
-                        updateJobSeeker(updatedJobSeeker);
-                    }
-                })
-                .catch(error => {
-                    const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
-                    toast({ title: "Error", description: errorMsg, variant: "destructive" });
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
+        if (user) {
+            const { role, job_seeker, recruiter, individual } = user;
+            console.log(user)
+            let user_details: JobSeeker | Recruiter | Individual | undefined;
+
+            if (role === 'job_seeker') {
+                user_details = job_seeker;
+            } else if (role === 'recruiter') {
+                user_details = recruiter;
+            } else if (role === 'individual') {
+                user_details = individual;
+            }
+
+            if (user_details) {
+                setIsLoading(true);
+                const payload: TaxInformationPayload = { ...validationResult.data, id: user_details.id };
+                updateTaxInformation(role, payload)
+                    .then(() => {
+                        toast({ title: "Success", description: "Tax information saved successfully." });
+                        const updatedDetails = { ...user_details, ...taxInfo };
+                        if (role === 'job_seeker') {
+                            updateJobSeeker(updatedDetails as JobSeeker);
+                        } else if (role === 'recruiter') {
+                            updateRecruiter(updatedDetails as Recruiter);
+                        } else if (role === 'individual') {
+                            updateIndividual(updatedDetails as Individual);
+                        }
+                    })
+                    .catch(error => {
+                        const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
+                        toast({ title: "Error", description: errorMsg, variant: "destructive" });
+                    })
+                    .finally(() => {
+                        setIsLoading(false);
+                    });
+            }
         }
     };
 
@@ -128,7 +159,7 @@ const TaxInformation = () => {
                     </div>
                 ))}
 
-                <div className="flex justify-start pt-4">
+                <div className="flex justify-end pt-4">
                     <Button type="submit" className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
                         {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Tax Information</>}
                     </Button>

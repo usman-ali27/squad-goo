@@ -5,17 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { UploadCloud, FileText, Download, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/stores/authStore";
-import { uploadFileAsBase64 } from "@/services/fileService";
-import { 
-    getJobSeekerDocuments, 
-    saveJobSeekerDocument, 
-    deleteJobSeekerDocument
-} from "@/services/jobSeekerService";
-import { 
-    getRecruiterDocuments, 
-    saveRecruiterDocument, 
-    deleteRecruiterDocument
-} from "@/services/recruiterService";
+import { getDocuments, saveDocument, deleteDocument } from "@/services/documentService";
 
 const DocumentItem = ({ doc, onDelete }) => {
   const getStatusClasses = (variant) => {
@@ -60,16 +50,13 @@ const DocumentManagement = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const isJobSeeker = user?.role === 'job_seeker';
-  const entityId = isJobSeeker ? user?.job_seeker?.id : user?.recruiter?.id;
-
-  const getDocuments = isJobSeeker ? getJobSeekerDocuments : getRecruiterDocuments;
-  const deleteDocument = isJobSeeker ? deleteJobSeekerDocument : deleteRecruiterDocument;
+  const role = user?.role;
+  const userId = user?.[role]?.id;
 
   const fetchDocuments = useCallback(() => {
-    if (entityId) {
+    if (role && userId) {
       setIsLoading(true);
-      getDocuments(entityId)
+      getDocuments(role, userId)
         .then(response => {
           setDocuments(response.data.data || []);
         })
@@ -80,7 +67,7 @@ const DocumentManagement = () => {
           setIsLoading(false);
         });
     }
-  }, [entityId, toast, getDocuments]);
+  }, [role, userId, toast]);
 
   useEffect(() => {
     fetchDocuments();
@@ -94,24 +81,16 @@ const DocumentManagement = () => {
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!entityId) return;
+    if (!role || !userId) return;
 
     setIsUploading(true);
 
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("doc_name", file.name);
+
     try {
-      const filePath = await uploadFileAsBase64(file);
-
-      const payload = {
-        doc_name: file.name,
-        file: filePath,
-      };
-
-      if (isJobSeeker) {
-        await saveJobSeekerDocument({ ...payload, jobseeker_id: entityId });
-      } else {
-        await saveRecruiterDocument({ ...payload, recruiter_id: entityId });
-      }
-
+      await saveDocument(role, userId, formData);
       toast({ title: "Success", description: "Document uploaded successfully." });
       fetchDocuments(); // Refresh list
     } catch (error) {
@@ -125,8 +104,8 @@ const DocumentManagement = () => {
   };
 
   const handleDelete = (docId: number) => {
-    if (entityId) {
-      deleteDocument(docId)
+    if (role) {
+      deleteDocument(role, docId)
         .then(() => {
           toast({ title: "Success", description: "Document removed." });
           fetchDocuments();

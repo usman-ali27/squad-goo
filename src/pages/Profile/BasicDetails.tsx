@@ -5,15 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/stores/authStore";
-import { getJobSeekerProfile, updateJobSeekerProfile } from "@/services/jobSeekerService";
+import { useUser, useAuthActions, JobSeeker, Recruiter, Individual } from "@/stores/authStore";
+import { useProfileData } from "@/contexts/ProfileDataContext";
+import { updateProfile } from "@/services/profileService";
 
 const BasicDetails = () => {
   const { toast } = useToast();
   const user = useUser();
+  const { updateJobSeeker, updateRecruiter, updateIndividual } = useAuthActions();
+  const profileData = useProfileData();
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -26,37 +28,29 @@ const BasicDetails = () => {
   const [bioWordCount, setBioWordCount] = useState(0);
 
   const countWords = (text: string) => {
+    if (!text) return 0;
     return text.trim().split(/\s+/).filter(Boolean).length;
   };
 
   useEffect(() => {
-    if (user && user.job_seeker) {
-      setIsLoading(true);
-      getJobSeekerProfile(user.job_seeker.id)
-        .then(response => {
-          const { first_name, last_name, dob, address, bio } = response.data.data;
-          const initialBio = bio || "";
-          setFormData({
-            first_name: first_name || "",
-            last_name: last_name || "",
-            dob: dob || "",
-            address: address || "",
-            bio: initialBio,
-          });
-          setBioWordCount(countWords(initialBio));
-        })
-        .catch(() => {
-          toast({
-            title: "Error",
-            description: "Failed to fetch profile data.",
-            variant: "destructive",
-          });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (profileData && user) {
+        const userRole = user.role;
+        const userData = profileData[userRole];
+
+        if (userData) {
+            const { first_name, last_name, dob, address, bio } = userData;
+            const initialBio = bio || "";
+            setFormData({
+                first_name: first_name || "",
+                last_name: last_name || "",
+                dob: dob || "",
+                address: address || "",
+                bio: initialBio,
+            });
+            setBioWordCount(countWords(initialBio));
+        }
     }
-  }, [user, toast]);
+}, [profileData, user]);
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'bio') {
@@ -85,15 +79,17 @@ const BasicDetails = () => {
 
     if (!formData.first_name.trim()) newErrors.first_name = "First name is required";
     if (!formData.last_name.trim()) newErrors.last_name = "Last name is required";
-    if (!formData.dob) {
-        newErrors.dob = "Date of birth is required";
-    } else {
-        const dobDate = new Date(formData.dob);
-        const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-        if (dobDate > today) {
-            newErrors.dob = "Date of birth cannot be in the future";
-        } else if (dobDate > eighteenYearsAgo) {
-            newErrors.dob = "You must be at least 18 years old";
+    if (user && user.role !== 'individual') {
+        if (!formData.dob) {
+            newErrors.dob = "Date of birth is required";
+        } else {
+            const dobDate = new Date(formData.dob);
+            const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+            if (dobDate > today) {
+                newErrors.dob = "Date of birth cannot be in the future";
+            } else if (dobDate > eighteenYearsAgo) {
+                newErrors.dob = "You must be at least 18 years old";
+            }
         }
     }
     if (!formData.address.trim()) newErrors.address = "Address is required";
@@ -103,35 +99,58 @@ const BasicDetails = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validateForm() && user && user.job_seeker) {
+    const handleSave = async () => {
+    if (validateForm() && user && profileData) {
       setIsLoading(true);
+      const userRole = user.role;
+      const roleId = profileData[userRole]?.id;
+
+      if (!roleId) {
+        toast({
+          title: "Error",
+          description: "Could not find profile ID.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const payload = {
         ...formData,
-        id: user.job_seeker.id,
+        id: roleId,
       };
-      updateJobSeekerProfile(payload)
-        .then(() => {
-          toast({
-            title: "Success",
-            description: "Your basic details have been updated successfully.",
-          });
-        })
-        .catch(error => {
-          const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
-          toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        })
-        .finally(() => {
-          setIsLoading(false);
+
+      try {
+        await updateProfile(user.role, payload);
+        toast({
+          title: "Success",
+          description: "Your basic details have been updated successfully.",
         });
+
+        const updatedDetails = { ...profileData[userRole], ...payload };
+        if (userRole === 'job_seeker') {
+            updateJobSeeker(updatedDetails as JobSeeker);
+        } else if (userRole === 'recruiter') {
+            updateRecruiter(updatedDetails as Recruiter);
+        } else if (userRole === 'individual') {
+            updateIndividual(updatedDetails as Individual);
+        }
+
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  if (isLoading && !formData.first_name) {
+
+  if (!profileData) {
     return <div>Loading...</div>;
   }
 
@@ -149,13 +168,11 @@ const BasicDetails = () => {
               <Label htmlFor="firstName">First Name</Label>
               <Input id="firstName" value={formData.first_name} onChange={e => handleInputChange("first_name", e.target.value)} className={errors.first_name ? "border-red-500" : ""} />
               {errors.first_name && <p className="text-sm text-red-500">{errors.first_name}</p>}
-              {/* <p className="text-xs text-red-500">Cannot be changed after KYC Verification</p> */}
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
               <Input id="lastName" value={formData.last_name} onChange={e => handleInputChange("last_name", e.target.value)} className={errors.last_name ? "border-red-500" : ""} />
               {errors.last_name && <p className="text-sm text-red-500">{errors.last_name}</p>}
-              {/* <p className="text-xs text-red-500">Cannot be changed after KYC Verification</p> */}
             </div>
           </div>
 
@@ -163,27 +180,23 @@ const BasicDetails = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <Input id="email" type="email" value={user.email} readOnly />
-              {/* <Alert className="border-red-200 bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <AlertDescription className="text-red-700">Verified email cannot be changed through app. Contact customer service.</AlertDescription>
-              </Alert> */}
             </div>
           )}
 
-          {user && user.job_seeker && (
+          {user && user.role === 'job_seeker' && profileData.job_seeker && (
             <div className="space-y-2">
               <Label htmlFor="contactNumber">Contact Number</Label>
-              <Input id="contactNumber" value={user.job_seeker.phone || ''} readOnly />
-              {/* <p className="text-xs text-muted-foreground">Re: Verification required when changing contact number</p> */}
+              <Input id="contactNumber" value={profileData.job_seeker.phone || ''} readOnly />
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Input id="dateOfBirth" type="date" max={new Date().toISOString().split("T")[0]} value={formData.dob} onChange={e => handleInputChange("dob", e.target.value)} className={errors.dob ? "border-red-500" : ""} />
-            {errors.dob && <p className="text-sm text-red-500">{errors.dob}</p>}
-            {/* <p className="text-xs text-red-500">Cannot be changed after KYC Verification</p> */}
-          </div>
+          {user && user.role !== 'individual' && (
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Input id="dateOfBirth" type="date" max={new Date().toISOString().split("T")[0]} value={formData.dob} onChange={e => handleInputChange("dob", e.target.value)} className={errors.dob ? "border-red-500" : ""} />
+              {errors.dob && <p className="text-sm text-red-500">{errors.dob}</p>}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="homeAddress">Home Address</Label>

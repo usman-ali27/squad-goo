@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useAuthActions } from "@/stores/authStore";
-import { updateRecruiterProfile } from "@/services/recruiterService";
 import { Save } from "lucide-react";
 import { z } from "zod";
+import { updateRecruiterCompany } from "@/services/profileService";
 
 const validationSchema = z.object({
   company_name: z.string().min(1, "Company name is required").max(150, "Company name cannot exceed 150 characters"),
-  abc: z.string().min(1, "ABC/ACN is required").max(150, "ABC/ACN cannot exceed 150 characters"),
+  abn: z.string().min(1, "ABN/ACN is required").max(150, "ABN/ACN cannot exceed 150 characters"),
   business_address: z.string().min(1, "Business address is required").max(255, "Business address cannot exceed 255 characters"),
   business_phone: z.string().min(1, "Business phone is required").max(255, "Business phone cannot exceed 255 characters"),
   director_name: z.string().min(1, "Director name is required").max(150, "Director name cannot exceed 150 characters"),
@@ -26,7 +26,7 @@ const CompanyDetailsRecruiter = () => {
   const { updateRecruiter } = useAuthActions();
   const [formData, setFormData] = useState({
     company_name: "",
-    abc: "",
+    abn: "",
     business_address: "",
     business_phone: "",
     director_name: "",
@@ -44,8 +44,8 @@ const CompanyDetailsRecruiter = () => {
     if (user && user.recruiter) {
       const { recruiter } = user;
       setFormData({
-        company_name: recruiter.business_name || "",
-        abc: recruiter.abn || "",
+        company_name: recruiter.company_name || "",
+        abn: recruiter.abn || "",
         business_address: recruiter.business_address || "",
         business_phone: recruiter.business_phone || "",
         director_name: recruiter.director_name || "",
@@ -85,9 +85,10 @@ const CompanyDetailsRecruiter = () => {
         id: user.recruiter.id,
         ...formData,
       };
-      updateRecruiterProfile(payload)
-        .then((response) => {
-          updateRecruiter(response.data.data);
+      updateRecruiterCompany(payload)
+        .then(() => {
+          const updatedRecruiter = { ...user.recruiter, ...formData };
+          updateRecruiter(updatedRecruiter);
           toast({
             title: "Success",
             description: "Your company details have been updated successfully.",
@@ -131,9 +132,9 @@ const CompanyDetailsRecruiter = () => {
             {errors.company_name && <p className="text-red-500 text-xs">{errors.company_name}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="abc">ABC/ACN</Label>
-            <Input id="abc" value={formData.abc} onChange={(e) => handleInputChange("abc", e.target.value)} />
-            {errors.abc && <p className="text-red-500 text-xs">{errors.abc}</p>}
+            <Label htmlFor="abn">ABN/ACN</Label>
+            <Input id="abn" value={formData.abn} onChange={(e) => handleInputChange("abn", e.target.value)} />
+            {errors.abn && <p className="text-red-500 text-xs">{errors.abn}</p>}
           </div>
         </div>
 

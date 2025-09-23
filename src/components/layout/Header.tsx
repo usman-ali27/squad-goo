@@ -107,23 +107,18 @@ const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-2">
-          <Button variant="orange" size="sm"> Recruiter </Button> <Button variant="orange-outline" size="sm"> Jobseeker </Button>
+            <Link to="/register?type=recruiter">
+                <Button variant="orange" size="sm"> Recruiter </Button>
+            </Link>
+            <Link to="/register?type=jobseeker">
+                <Button variant="orange-outline" size="sm"> Jobseeker </Button>
+            </Link>
 
-            {!isAuthenticated ? (
+            {isAuthenticated ? (
                 <>
-                    <Link to="/login">
-                        <Button variant="outline" size="sm">
-                            Login
-                        </Button>
+                    <Link to="/dashboard">
+                        <Button variant="outline" size="sm">Dashboard</Button>
                     </Link>
-                    <Link to="/register">
-                        <Button variant="orange" size="sm">
-                            Register
-                        </Button>
-                    </Link>
-                </>
-            ) : (
-                <>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -142,6 +137,10 @@ const Header = () => {
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
+                                <Link to="/dashboard">Dashboard</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
                                 <Link to="/profile">Profile Settings</Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -150,6 +149,20 @@ const Header = () => {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                </>
+            ) : (
+                <>
+                    <Link to="/login">
+                        <Button variant="outline" size="sm">
+                            Login
+                        </Button>
+                    </Link>
+
+                    {/* <Link to="/register">
+                        <Button variant="outline" size="sm">
+                            Register
+                        </Button>
+                    </Link> */}
                 </>
             )}
           </div>

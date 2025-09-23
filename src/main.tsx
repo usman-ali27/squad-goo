@@ -6,6 +6,9 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 
 createRoot(document.getElementById('root')!).render(
-  <App />
-
+  <React.StrictMode>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </React.StrictMode>
 );

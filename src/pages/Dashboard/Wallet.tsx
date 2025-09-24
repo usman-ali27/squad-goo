@@ -1,241 +1,122 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
-import { Wallet as WalletIcon, Download, AlertCircle, CreditCard, Receipt, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const transactions = [
   {
-    date: "2023-09-01",
+    date: "2025-09-01",
     id: "#TXN12345",
     type: "Purchase",
     amount: "+500",
-    status: "Success"
+    status: "Success",
   },
   {
-    date: "2023-08-30",
+    date: "2025-09-02",
     id: "#TXN12346",
     type: "Withdraw",
-    amount: "-250",
-    status: "Pending"
+    amount: "-200",
+    status: "Pending",
   },
   {
-    date: "2023-08-20",
+    date: "2025-09-03",
     id: "#TXN12347",
     type: "Report",
     amount: "0",
-    status: "Failed"
+    status: "Failed",
   },
   {
-    date: "2023-08-04",
+    date: "2025-09-04",
     id: "#TXN12348",
     type: "Purchase",
     amount: "+300",
-    status: "Success"
-  }
+    status: "Success",
+  },
 ];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Success": return "bg-green-100 text-green-800";
-    case "Pending": return "bg-yellow-100 text-yellow-800";
-    case "Failed": return "bg-red-100 text-red-800";
-    default: return "bg-gray-100 text-gray-800";
+const getStatusClasses = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "success":
+      return "bg-green-500 text-white";
+    case "pending":
+      return "bg-yellow-500 text-white";
+    case "failed":
+      return "bg-red-500 text-white";
+    default:
+      return "bg-gray-500 text-white";
   }
 };
 
-const getAmountColor = (amount: string) => {
-  if (amount.startsWith("+")) return "text-green-600";
-  if (amount.startsWith("-")) return "text-red-600";
-  return "text-gray-600";
-};
+const ActionCard = ({ title, description, buttonText }: { title: string, description: string, buttonText: string }) => (
+    <Card className="bg-gray-50 text-center shadow-md">
+        <CardHeader>
+            <CardTitle className="text-purple-800">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-gray-600 mb-4">{description}</p>
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-md">{buttonText}</Button>
+        </CardContent>
+    </Card>
+);
 
 const Wallet = () => {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl lg:text-3xl font-bold mb-4">Wallet</h1>
-      </div>
+    <div className="p-6 bg-white rounded-lg shadow-lg">
+        <h1 className="text-center text-2xl font-bold text-[#2A004E] mb-6">Wallet</h1>
 
-      {/* Balance Card */}
-      <Card className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
-        <CardContent className="py-8">
-          <div className="text-center">
-            <p className="text-purple-100 mb-2">Available Balance</p>
-            <h2 className="text-4xl font-bold">1,250 SG Coins</h2>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Transactions */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 p-3 bg-orange-100 rounded-full w-fit">
-              <Receipt className="h-6 w-6 text-orange-600" />
-            </div>
-            <CardTitle className="text-lg">Transactions</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              View all your SG coin transactions from last month
-            </p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              View Transactions
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Download History */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 p-3 bg-orange-100 rounded-full w-fit">
-              <Download className="h-6 w-6 text-orange-600" />
-            </div>
-            <CardTitle className="text-lg">Download History</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Download a detailed report of your payment history
-            </p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              Download
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Report Issue */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 p-3 bg-orange-100 rounded-full w-fit">
-              <AlertCircle className="h-6 w-6 text-orange-600" />
-            </div>
-            <CardTitle className="text-lg">Report Issue</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Report any transaction or payment irregularities
-            </p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              Report
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Purchase/Withdraw/Invoice Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Purchase Coins */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 p-3 bg-orange-100 rounded-full w-fit">
-              <CreditCard className="h-6 w-6 text-orange-600" />
-            </div>
-            <CardTitle className="text-lg">Purchase Coins</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Buy SG Coins securely via our platform
-            </p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              Purchase
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Withdraw Coins */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 p-3 bg-orange-100 rounded-full w-fit">
-              <WalletIcon className="h-6 w-6 text-orange-600" />
-            </div>
-            <CardTitle className="text-lg">Withdraw Coins</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Withdraw your SG Coins balance to your bank account
-            </p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              Withdraw
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Invoices & Proofs */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 p-3 bg-orange-100 rounded-full w-fit">
-              <FileText className="h-6 w-6 text-orange-600" />
-            </div>
-            <CardTitle className="text-lg">Invoices & Proofs</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Access proof of income and payment invoices for tax purposes
-            </p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              Download
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Transactions Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Transactions</CardTitle>
-          <Button variant="link" className="text-sm">All Txns</Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-purple-600 hover:bg-purple-600">
-                  <TableHead className="text-white font-semibold">Date</TableHead>
-                  <TableHead className="text-white font-semibold">Transaction ID</TableHead>
-                  <TableHead className="text-white font-semibold">Type</TableHead>
-                  <TableHead className="text-white font-semibold">Amount</TableHead>
-                  <TableHead className="text-white font-semibold">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((transaction) => (
-                  <TableRow key={transaction.id} className="hover:bg-muted/50">
-                    <TableCell>{transaction.date}</TableCell>
-                    <TableCell className="font-medium">{transaction.id}</TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell className={`font-medium ${getAmountColor(transaction.amount)}`}>
-                      {transaction.amount}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(transaction.status)}>
-                        {transaction.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      <div className="flex justify-center">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-          >
-            1
-          </Button>
-          <Button variant="outline" size="sm">2</Button>
-          <Button variant="outline" size="sm">3</Button>
+        <div className="bg-[#2A004E] text-white p-6 rounded-lg text-center mb-8">
+            <h2 className="text-lg">Available Balance</h2>
+            <p className="text-4xl font-bold">1,250 SG Coins</p>
         </div>
-      </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <ActionCard title="Transactions" description="View all your SG coin transactions history." buttonText="View Transactions" />
+            <ActionCard title="Download History" description="Download a detailed report of your past transactions." buttonText="Download" />
+            <ActionCard title="Report Issue" description="Report any suspicious or incorrect transactions." buttonText="Report" />
+            <ActionCard title="Purchase Coins" description="Buy SG Coins securely using available payment options." buttonText="Purchase" />
+            <ActionCard title="Withdraw Coins" description="Withdraw your SG Coins balance to your bank/wallet." buttonText="Withdraw" />
+            <ActionCard title="Invoices & Proofs" description="Send invoices or request payment proof after each transaction." buttonText="Manage" />
+        </div>
+
+        <div className="flex justify-between items-center mb-4">
+            <Input placeholder="Search transactions..." className="max-w-xs" />
+            <Button variant="secondary" className="bg-gray-200 text-black">All Types</Button>
+        </div>
+
+        <div className="rounded-lg overflow-hidden border">
+              <Table>
+                <TableHeader className="bg-[#2A004E]">
+                  <TableRow>
+                    <TableHead className="text-white font-bold">Date</TableHead>
+                    <TableHead className="text-white font-bold">Transaction ID</TableHead>
+                    <TableHead className="text-white font-bold">Type</TableHead>
+                    <TableHead className="text-white font-bold">Amount</TableHead>
+                    <TableHead className="text-white font-bold">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((transaction, index) => (
+                    <TableRow key={index} className="hover:bg-gray-50 border-b">
+                      <TableCell className="text-gray-700">{transaction.date}</TableCell>
+                      <TableCell className="text-gray-700 font-medium">{transaction.id}</TableCell>
+                      <TableCell className="text-gray-700">{transaction.type}</TableCell>
+                      <TableCell className={`font-semibold ${transaction.amount.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>{transaction.amount}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusClasses(transaction.status)}>{transaction.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex justify-center items-center gap-2 mt-4">
+                <Button className="bg-[#2A004E] text-white w-8 h-8">1</Button>
+                <Button variant="outline" className="w-8 h-8">2</Button>
+                <Button variant="outline" className="w-8 h-8">3</Button>
+            </div>
     </div>
   );
 };

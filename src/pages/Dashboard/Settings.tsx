@@ -1,46 +1,447 @@
+
 import { useState } from "react";
+import { useUser } from "@/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Target, Clock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { 
+  Target, 
+  Zap, 
+  Briefcase, 
+  Wrench, 
+  Users, 
+  Bell,
+  Shield, 
+  LifeBuoy,
+  AlertTriangle
+} from "lucide-react";
+import FindAStaff from "./FindAStaff";
 
-const Settings = () => {
+const JobSeekerSettings = () => {
+  const [activeTab, setActiveTab] = useState("job");
   const [date, setDate] = useState<Date>();
+
   const [quickOfferSettings, setQuickOfferSettings] = useState({
     directPayments: true,
     enoughBalance: false,
     proRecruiter: false
   });
-  
+
   const [manualOfferSettings, setManualOfferSettings] = useState({
-    proRecruiter: false
+    proRecruiter: false,
   });
 
-  const [individualSettings, setIndividualSettings] = useState({
+  const [individualOfferSettings, setIndividualOfferSettings] = useState({
     proRecruiter: false,
     platformPayments: true,
-    selectedIndustries: false
+    selectedIndustries: false,
   });
-
+  
   const [selectedIndustries, setSelectedIndustries] = useState({
     technology: false,
     healthcare: false,
     finance: false,
     retail: false,
     manufacturing: false,
-    education: false
+    education: false,
   });
 
-  return (
+  const [appSettings, setAppSettings] = useState({
+    pushNotifications: true,
+    emailNotifications: true,
+  });
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "job":
+        return <JobSettings />;
+      case "app":
+        return <AppSettings />;
+      case "squad":
+        return <SquadSettings />;
+      default:
+        return <JobSettings />;
+    }
+  };
+
+  const JobSettings = () => (
+    <div className="space-y-8 shadow-md bg-white p-4 rounded-md">
+      <div className="flex items-center gap-4">
+        <Briefcase className="h-8 w-8 text-gray-700" />
+        <h1 className="text-2xl font-bold text-gray-800">Job Settings</h1>
+      </div>
+      <Card className="bg-[#F7F7FD] border-none">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-600">
+            <Target className="h-5 w-5" />
+            Job Offer Preferences
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Type of Job Offer Preference</p>
+            <div className="bg-white border border-gray-200 rounded-md px-4 py-2 text-sm">Both Manual & Quick</div>
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Offers from User Type Preference</p>
+            <div className="bg-white border border-gray-200 rounded-md px-4 py-2 text-sm">Individual & Recruiter</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-[#F7F7FD] border-none">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-yellow-500">
+            <Zap className="h-5 w-5" />
+            Quick Offer Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only receive offers where payments are handled directly from platform</p>
+            <Switch 
+              checked={quickOfferSettings.directPayments}
+              onCheckedChange={(checked) => 
+                setQuickOfferSettings(prev => ({ ...prev, directPayments: checked }))
+              }
+              className="data-[state=checked]:bg-purple-600"
+            />
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only receive offers where recruiter has enough balance for full hours</p>
+            <Switch 
+              checked={quickOfferSettings.enoughBalance}
+              onCheckedChange={(checked) => 
+                setQuickOfferSettings(prev => ({ ...prev, enoughBalance: checked }))
+              }
+            />
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only get offers from PRO BADGE or above recruiters/individuals</p>
+            <Switch 
+              checked={quickOfferSettings.proRecruiter}
+              onCheckedChange={(checked) => 
+                setQuickOfferSettings(prev => ({ ...prev, proRecruiter: checked }))
+              }
+            />
+          </div>
+
+          <div className="bg-[#EFECF8] rounded-lg p-4 mt-6">
+            <h4 className="font-semibold text-gray-800 mb-4">Quick Offer Availability Settings</h4>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-center text-center font-normal bg-white py-10 flex-col h-auto",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <div>Calendar widget for selecting available dates and times</div>
+                  <div className="text-xs">Click to set your availability for quick offers</div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-[#F7F7FD] border-none">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-600">
+            <Wrench className="h-5 w-5" />
+            Manual Offer Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only get offers from PRO BADGE or above recruiters/individuals</p>
+            <Switch
+              checked={manualOfferSettings.proRecruiter}
+              onCheckedChange={(checked) =>
+                setManualOfferSettings(prev => ({...prev, proRecruiter: checked}))
+              }
+            />
+          </div>
+          <div className="bg-[#FFF9F6] border border-[#F9EAE1] rounded-lg p-4 mt-6">
+            <h4 className="font-semibold text-orange-600 mb-4">Manual Offer Availability Settings</h4>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center text-center font-normal bg-white py-10 flex-col h-auto"
+                >
+                  <div>Calendar widget for selecting available dates and times</div>
+                  <div className="text-xs">Click to set your availability for manual offers</div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" onSelect={setDate} initialFocus />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-[#F7F7FD] border-none">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-600">
+            <Users className="h-5 w-5" />
+            Individual Offers Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only get offers from PRO BADGE or above individuals</p>
+            <Switch
+              checked={individualOfferSettings.proRecruiter}
+              onCheckedChange={(checked) =>
+                setIndividualOfferSettings(prev => ({...prev, proRecruiter: checked}))
+              }
+            />
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only accept offers where payments are handled by platform</p>
+            <Switch
+              checked={individualOfferSettings.platformPayments}
+              onCheckedChange={(checked) =>
+                setIndividualOfferSettings(prev => ({...prev, platformPayments: checked}))
+              }
+              className="data-[state=checked]:bg-orange-500"
+            />
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Only receive offers related to selected industries</p>
+            <Switch
+              checked={individualOfferSettings.selectedIndustries}
+              onCheckedChange={(checked) =>
+                setIndividualOfferSettings(prev => ({...prev, selectedIndustries: checked}))
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-4 gap-4 p-3 bg-white rounded-md">
+            {Object.entries(selectedIndustries).map(([key, checked]) => (
+              <div key={key} className="flex items-center space-x-2">
+                <Checkbox
+                  id={key}
+                  checked={checked}
+                  onCheckedChange={(checked) =>
+                    setSelectedIndustries((prev) => ({ ...prev, [key]: checked as boolean }))
+                  }
+                />
+                <label htmlFor={key} className="text-sm capitalize cursor-pointer text-gray-600">
+                  {key}
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-[#FFF9F6] border border-[#F9EAE1] rounded-lg p-4 mt-6">
+            <h4 className="font-semibold text-orange-600 mb-4">Individual Offers Availability Settings</h4>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center text-center font-normal bg-white py-10 flex-col h-auto"
+                >
+                  <div>Calendar widget for selecting available dates and times</div>
+                  <div className="text-xs">Click to set your availability for individual offers</div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" onSelect={setDate} initialFocus />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const AppSettings = () => (
     <div className="space-y-6">
+       <h1 className="text-2xl font-bold text-gray-800">App Settings</h1>
+        <Card className="bg-[#F7F7FD] border-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-600">
+                <Users className="h-5 w-5" />
+                Account Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3">
+                <p className="text-gray-600">Sign Out (Job Seeker ID: #JS12345)</p>
+                <Button variant="outline" className="bg-gray-700 text-white">Sign Out</Button>
+              </div>
+              <hr/>
+              <div className="flex justify-between items-center p-3">
+                <p className="text-gray-600">Manage Account/Profile</p>
+                <Button variant="outline" className="bg-blue-600 text-white">Manage Profile</Button>
+              </div>
+              <hr/>
+              <div className="flex justify-between items-center p-3">
+                <p className="text-gray-600">Switch Profile</p>
+                <Button variant="outline" className="bg-purple-600 text-white">Switch to Squad Profile</Button>
+              </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#F7F7FD] border-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-500">
+                <Bell className="h-5 w-5" />
+                Notifications & Communication
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3">
+                <p className="text-gray-600">Push Notifications</p>
+                <Switch
+                  checked={appSettings.pushNotifications}
+                  onCheckedChange={(checked) =>
+                    setAppSettings(prev => ({...prev, pushNotifications: checked}))
+                  }
+                  className="data-[state=checked]:bg-blue-500"
+                />
+              </div>
+              <hr/>
+              <div className="flex justify-between items-center p-3">
+                <p className="text-gray-600">Email Notifications</p>
+                <Switch
+                  checked={appSettings.emailNotifications}
+                  onCheckedChange={(checked) =>
+                    setAppSettings(prev => ({...prev, emailNotifications: checked}))
+                  }
+                  className="data-[state=checked]:bg-blue-500"
+                />
+              </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-[#F7F7FD] border-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-600">
+              <Shield className="h-5 w-5" />
+              Security & Privacy
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center p-3">
+              <p className="text-gray-600">Security and Passwords</p>
+              <Button className="bg-blue-600 text-white">Manage Security</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#F7F7FD] border-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-600">
+              <LifeBuoy className="h-5 w-5" />
+              Support & Help
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center p-3">
+              <p className="text-gray-600">Tips & Help</p>
+              <Button className="bg-green-600 text-white">Get Help</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#F7F7FD] border-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-600">
+              <AlertTriangle className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center p-3">
+              <p className="text-gray-600">Close Your Account Permanently</p>
+              <Button className="bg-red-600 text-white">Delete Account</Button>
+            </div>
+          </CardContent>
+        </Card>
+    </div>
+  );
+
+  const SquadSettings = () => (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">Squad Settings</h1>
+      <Card className="bg-[#FFF9F6] border border-green-200 rounded-lg">
+        <CardHeader>
+          <CardTitle className="text-teal-600">Squad Management</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Pair with Another User (Create Squad Account)</p>
+            <Button className="bg-blue-600 text-white">Create Squad</Button>
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Active/Dismantle Current Squad</p>
+            <div className="flex gap-2">
+              <Button className="bg-green-600 text-white">Activate Squad</Button>
+              <Button className="bg-red-600 text-white">Dismantle Squad</Button>
+            </div>
+          </div>
+          <hr/>
+          <div className="flex justify-between items-center p-3">
+            <p className="text-gray-600">Manage Members in Squad</p>
+            <Button className="bg-blue-600 text-white">Manage Members</Button>
+          </div>
+
+          <div className="bg-white rounded-lg mt-4">
+            <div className="flex justify-between items-center p-3">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold">JD</div>
+                <div>
+                  <p className="font-semibold">John Doe</p>
+                  <p className="text-sm text-gray-500">Squad Leader</p>
+                </div>
+              </div>
+              <Button className="bg-gray-700 text-white">Manage</Button>
+            </div>
+            <hr/>
+            <div className="flex justify-between items-center p-3">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold">SM</div>
+                <div>
+                  <p className="font-semibold">Sarah Miller</p>
+                  <p className="text-sm text-gray-500">Member</p>
+                </div>
+              </div>
+              <Button className="bg-red-600 text-white">Remove</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8 shadow-md bg-white p-4 rounded-md">
       {/* Header */}
       <div className="text-center">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-8 px-6 rounded-xl">
+        <div className="bg-[#2A004E] text-white py-8 px-6 rounded-xl">
           <h1 className="text-3xl lg:text-4xl font-bold mb-2">SETTINGS</h1>
           <p className="text-purple-100">Customize your job preferences and account settings</p>
         </div>
@@ -48,216 +449,47 @@ const Settings = () => {
 
       {/* Tab Buttons */}
       <div className="flex flex-wrap justify-center gap-2">
-        <Button variant="outline" className="bg-white">Job Settings</Button>
-        <Button className="bg-purple-600 text-white hover:bg-purple-700">App Settings</Button>
-        <Button className="bg-purple-600 text-white hover:bg-purple-700">Squad Settings</Button>
+        <Button 
+          onClick={() => setActiveTab("job")} 
+          variant={activeTab === 'job' ? 'outline' : 'default'}
+          className={activeTab === 'job' 
+            ? "bg-white rounded-full text-purple-600 border-purple-600" 
+            : "bg-[#2A004E] text-white hover:bg-[#2A004E] rounded-full"}
+        >
+          Job Settings
+        </Button>
+        <Button 
+          onClick={() => setActiveTab("app")} 
+          variant={activeTab === 'app' ? 'outline' : 'default'}
+          className={activeTab === 'app' 
+            ? "bg-white rounded-full text-purple-600 border-purple-600" 
+            : "bg-[#2A004E] text-white hover:bg-[#2A004E] rounded-full"}>
+          App Settings
+        </Button>
+        <Button 
+          onClick={() => setActiveTab("squad")}
+          variant={activeTab === 'squad' ? 'outline' : 'default'}
+          className={activeTab === 'squad' 
+            ? "bg-white rounded-full text-purple-600 border-purple-600" 
+            : "bg-[#2A004E] text-white hover:bg-[#2A004E] rounded-full"}>
+          Squad Settings
+        </Button>
       </div>
 
-      {/* Job Settings Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Job Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Job Offer Preferences */}
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
-              <Target className="h-4 w-4 text-red-500" />
-              Job Offer Preferences
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Type of Job Offer Preference</label>
-                <div className="mt-1 text-sm text-muted-foreground">Both Manual & Quick</div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Offers from User Type Preference</label>
-                <div className="mt-1 text-sm text-muted-foreground">Individual & Recruiter</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Offer Settings */}
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
-              <Clock className="h-4 w-4 text-yellow-500" />
-              Quick Offer Settings
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only receive offers where payments are handled directly from platform</div>
-                </div>
-                <Switch 
-                  checked={quickOfferSettings.directPayments}
-                  onCheckedChange={(checked) => 
-                    setQuickOfferSettings(prev => ({ ...prev, directPayments: checked }))
-                  }
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only receive offers where recruiter has enough balance for full hours</div>
-                </div>
-                <Switch 
-                  checked={quickOfferSettings.enoughBalance}
-                  onCheckedChange={(checked) => 
-                    setQuickOfferSettings(prev => ({ ...prev, enoughBalance: checked }))
-                  }
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only get offers from PRO BADGE or above recruiters/individuals</div>
-                </div>
-                <Switch 
-                  checked={quickOfferSettings.proRecruiter}
-                  onCheckedChange={(checked) => 
-                    setQuickOfferSettings(prev => ({ ...prev, proRecruiter: checked }))
-                  }
-                />
-              </div>
-
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <h4 className="font-medium text-orange-800 mb-2">Quick Offer Availability Settings</h4>
-                <p className="text-sm text-orange-700">
-                  Calendar widget for selecting available dates and times. 
-                  Click to set your availability for quick offers.
-                </p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full mt-3 justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : "Select availability dates"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </div>
-
-          {/* Manual Offer Settings */}
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
-              <Users className="h-4 w-4 text-blue-500" />
-              Manual Offer Settings
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only get offers from PRO BADGE or above recruiters/individuals</div>
-                </div>
-                <Switch 
-                  checked={manualOfferSettings.proRecruiter}
-                  onCheckedChange={(checked) => 
-                    setManualOfferSettings(prev => ({ ...prev, proRecruiter: checked }))
-                  }
-                />
-              </div>
-
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <h4 className="font-medium text-orange-800 mb-2">Manual Offer Availability Settings</h4>
-                <p className="text-sm text-orange-700">
-                  Calendar widget for selecting available dates and times. 
-                  Click to set your availability for manual offers.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Individual Offers Settings */}
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
-              <Users className="h-4 w-4 text-blue-500" />
-              Individual Offers Settings
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only get offers from PRO BADGE or above recruiters/individuals</div>
-                </div>
-                <Switch 
-                  checked={individualSettings.proRecruiter}
-                  onCheckedChange={(checked) => 
-                    setIndividualSettings(prev => ({ ...prev, proRecruiter: checked }))
-                  }
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only accept offers where payments are handled by platform</div>
-                </div>
-                <Switch 
-                  checked={individualSettings.platformPayments}
-                  onCheckedChange={(checked) => 
-                    setIndividualSettings(prev => ({ ...prev, platformPayments: checked }))
-                  }
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Only receive offers related to selected Industries</div>
-                </div>
-                <Switch 
-                  checked={individualSettings.selectedIndustries}
-                  onCheckedChange={(checked) => 
-                    setIndividualSettings(prev => ({ ...prev, selectedIndustries: checked }))
-                  }
-                />
-              </div>
-
-              {/* Industry Selection */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                {Object.entries(selectedIndustries).map(([key, checked]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={key}
-                      checked={checked}
-                      onCheckedChange={(checked) => 
-                        setSelectedIndustries(prev => ({ ...prev, [key]: checked as boolean }))
-                      }
-                    />
-                    <label htmlFor={key} className="text-sm capitalize cursor-pointer">
-                      {key}
-                    </label>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <h4 className="font-medium text-orange-800 mb-2">Individual Offers Availability Settings</h4>
-                <p className="text-sm text-orange-700">
-                  Calendar widget for selecting available dates and times. 
-                  Click to set your availability for individual offers.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {renderContent()}
     </div>
   );
+}
+
+const Settings = () => {
+  const user = useUser();
+  const isRecruiter = user?.role === 'recruiter';
+
+  if (isRecruiter) {
+    return <FindAStaff />;
+  }
+
+  return <JobSeekerSettings />;
 };
 
 export default Settings;

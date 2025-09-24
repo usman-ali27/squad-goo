@@ -13,7 +13,11 @@ import {
 import logo from "/assets/images/logo.png";
 import { useUser } from "@/stores/authStore";
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  toggleSidebar: () => void;
+}
+
+const DashboardHeader = ({ toggleSidebar }: DashboardHeaderProps) => {
   const user = useUser();
   const isRecruiter = user?.role === 'recruiter';
 
@@ -54,9 +58,11 @@ const DashboardHeader = () => {
         </div>
         <div className="flex items-center gap-2">
           {isRecruiter && (
-            <Button variant="orange" size="sm" className="mr-4">
-              Find Staff
-            </Button>
+            <Link to="/dashboard/find-staff">
+              <Button variant="orange" size="sm" className="mr-4">
+                Find Staff
+              </Button>
+            </Link>
           )}
           <Button variant="ghost" size="icon" className="rounded-full">
             <Search className="h-5 w-5 text-gray-600" />
@@ -68,7 +74,9 @@ const DashboardHeader = () => {
             <Bell className="h-5 w-5 text-gray-600" />
           </Button>
         
-          <LuLayoutDashboard />
+          <Link to="/" className="rounded-full">
+            <LuLayoutDashboard className="h-5 w-5 text-gray-600" />
+          </Link>
           <Button variant="ghost" size="icon" className="rounded-full">
             <User className="h-5 w-5 text-gray-600" />
           </Button>
@@ -80,7 +88,7 @@ const DashboardHeader = () => {
         className="px-6 py-3 flex items-center text-white" 
         style={subHeaderStyle}
       >
-        <Button variant="ghost" size="icon" className="mr-4 text-white hover:bg-white/20">
+        <Button variant="ghost" size="icon" className="mr-4 text-white hover:bg-white/20 " onClick={toggleSidebar}>
             <MenuIcon className="h-6 w-6" />
         </Button>
         <h1 className="text-xl font-bold">Dashboard</h1>

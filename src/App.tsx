@@ -40,6 +40,8 @@ import TaxInformation from "./pages/Profile/TaxInformation";
 import SocialMediaLinks from "./pages/Profile/SocialMediaLinks";
 import KYCVerification from "./pages/Profile/KYCVerification";
 import Documents from "./pages/Profile/Documents";
+import Wallet from "./pages/Dashboard/Wallet";
+import FindStaffPage from "./pages/Dashboard/FindStaff";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,12 +95,12 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardHome /> },
           { path: "find-jobs", element: <div className="p-8 text-center">Find Jobs Page Coming Soon</div> },
-          { path: "find-staff", element: <div className="p-8 text-center">Find Staff Page Coming Soon</div> },
+          { path: "find-staff", element: <FindStaffPage />},
           { path: "job-pool", element: <div className="p-8 text-center">Job Pool Page Coming Soon</div> },
           { path: "applications", element: <div className="p-8 text-center">Applications Page Coming Soon</div> },
           { path: "candidates", element: <div className="p-8 text-center">Candidates Page Coming Soon</div> },
-          { path: "messages", element: <div className="p-8 text-center">Messages Page Coming Soon</div> },
-          { path: "wallet", element: <div className="p-8 text-center">Wallet Page Coming Soon</div> },
+          { path: "chat", element: <div className="p-8 text-center">Messages Page Coming Soon</div> },
+          { path: "wallet", element: <Wallet /> },
           { path: "settings", element: <Settings /> },
           { path: "upgrades", element: <AccountUpgrades /> },
           { path: "support", element: <Support /> },

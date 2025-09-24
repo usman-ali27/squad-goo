@@ -1,39 +1,58 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Search, Filter, Eye, Edit3, Trash2 } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
 
-const supportTickets = [
+const tickets = [
   {
-    id: "T-10024",
-    subject: "Payment link found at checkout",
+    id: "T-10238",
+    subject: "Payment declined at checkout",
     category: "Payments",
     priority: "High",
     status: "Open",
-    created: "2023-09-01",
-    updated: "2023-09-02"
+    created: "2025-09-03",
+    updated: "2025-09-05",
   },
   {
-    id: "T-10246",
+    id: "T-10236",
     subject: "App crashes on Android 14",
     category: "Technical",
-    priority: "High", 
+    priority: "High",
     status: "Open",
-    created: "2023-09-02",
-    updated: "2023-09-03"
+    created: "2025-09-02",
+    updated: "2025-09-03",
   },
   {
     id: "T-10234",
     subject: "Cannot login after password reset",
     category: "Account",
     priority: "High",
-    status: "Open", 
-    created: "2023-08-29",
-    updated: "2023-09-01"
+    status: "Open",
+    created: "2025-08-29",
+    updated: "2025-09-01",
   },
   {
     id: "T-10235",
@@ -41,161 +60,142 @@ const supportTickets = [
     category: "Payments",
     priority: "Normal",
     status: "Pending",
-    created: "2023-08-29",
-    updated: "2023-08-30"
+    created: "2025-08-20",
+    updated: "2025-08-30",
   },
   {
     id: "T-10239",
     subject: "2FA code not arriving",
-    category: "Account", 
+    category: "Account",
     priority: "Normal",
     status: "Pending",
-    created: "2023-08-12",
-    updated: "2023-08-15"
-  }
+    created: "2025-08-12",
+    updated: "2025-08-18",
+  },
 ];
 
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "High": return "bg-red-100 text-red-800";
-    case "Normal": return "bg-blue-100 text-blue-800";
-    case "Low": return "bg-gray-100 text-gray-800";
-    default: return "bg-gray-100 text-gray-800";
+const getPriorityClasses = (priority: string) => {
+  switch (priority.toLowerCase()) {
+    case "high":
+      return "bg-orange-100 text-orange-800 border-orange-200";
+    case "normal":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
   }
 };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Open": return "bg-green-100 text-green-800";
-    case "Pending": return "bg-yellow-100 text-yellow-800"; 
-    case "Closed": return "bg-gray-100 text-gray-800";
-    default: return "bg-gray-100 text-gray-800";
+const getStatusClasses = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "open":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
   }
 };
 
 const Support = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Support Tickets</h1>
-        </div>
-        <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-          Create Ticket
-        </Button>
+    <div className="space-y-8 shadow-md bg-white p-4 rounded-md">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold" style={{color: '#4B0082'}}>Support Tickets</h1>
+        <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-md">Create Ticket</Button>
       </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search ticket ID, subject, keywords..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+      <Card className="shadow-lg">
+        <CardContent className="pt-6">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <Input placeholder="Search ticket ID, subject, keywords..." className="max-w-md" />
+              <div className="flex gap-2">
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="payments">Payments</SelectItem>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="account">Account</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} className="w-[150px] justify-start text-left font-normal text-gray-500">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span>mm/dd/yyyy</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" initialFocus />
+                  </PopoverContent>
+                </Popover>
+                 <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} className="w-[150px] justify-start text-left font-normal text-gray-500">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span>mm/dd/yyyy</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All Status">All Status</SelectItem>
-                  <SelectItem value="Open">Open</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Closed">Closed</SelectItem>
-                </SelectContent>
-              </Select>
 
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All Categories">All Categories</SelectItem>
-                  <SelectItem value="Payments">Payments</SelectItem>
-                  <SelectItem value="Technical">Technical</SelectItem>
-                  <SelectItem value="Account">Account</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">mm/dd/yyyy</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">mm/dd/yyyy</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Sort: <span className="font-semibold text-black">Newest</span></span>
+              <Button variant="secondary" size="sm" className="bg-gray-200 text-black hover:bg-gray-300">Toggle Sort</Button>
+              <Button variant="secondary" size="sm" className="bg-gray-200 text-black hover:bg-gray-300">Export CSV</Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm">Delete Latest</Button>
-        <Button variant="outline" size="sm">Ticket Sort</Button>
-        <Button variant="outline" size="sm">Export CSV</Button>
-      </div>
-
-      {/* Tickets Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="mt-4 rounded-lg overflow-hidden border">
             <Table>
-              <TableHeader>
-                <TableRow className="bg-purple-600 hover:bg-purple-600">
-                  <TableHead className="text-white font-semibold">Ticket ID</TableHead>
-                  <TableHead className="text-white font-semibold">Subject</TableHead>
-                  <TableHead className="text-white font-semibold">Category</TableHead>
-                  <TableHead className="text-white font-semibold">Priority</TableHead>
-                  <TableHead className="text-white font-semibold">Status</TableHead>
-                  <TableHead className="text-white font-semibold">Created</TableHead>
-                  <TableHead className="text-white font-semibold">Updated</TableHead>
-                  <TableHead className="text-white font-semibold">Actions</TableHead>
+              <TableHeader style={{backgroundColor: '#4B0082'}}>
+                <TableRow>
+                  <TableHead className="text-white font-bold">Ticket ID</TableHead>
+                  <TableHead className="text-white font-bold">Subject</TableHead>
+                  <TableHead className="text-white font-bold">Category</TableHead>
+                  <TableHead className="text-white font-bold">Priority</TableHead>
+                  <TableHead className="text-white font-bold">Status</TableHead>
+                  <TableHead className="text-white font-bold">Created</TableHead>
+                  <TableHead className="text-white font-bold">Updated</TableHead>
+                  <TableHead className="text-white font-bold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {supportTickets.map((ticket) => (
-                  <TableRow key={ticket.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{ticket.id}</TableCell>
-                    <TableCell>{ticket.subject}</TableCell>
-                    <TableCell>{ticket.category}</TableCell>
+                {tickets.map((ticket) => (
+                  <TableRow key={ticket.id} className="hover:bg-gray-50 border-b">
+                    <TableCell className="text-gray-700">{ticket.id}</TableCell>
+                    <TableCell className="text-gray-700">{ticket.subject}</TableCell>
+                    <TableCell className="text-gray-700">{ticket.category}</TableCell>
                     <TableCell>
-                      <Badge className={getPriorityColor(ticket.priority)}>
-                        {ticket.priority}
-                      </Badge>
+                      <Badge className={getPriorityClasses(ticket.priority)}>{ticket.priority}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(ticket.status)}>
-                        {ticket.status}
-                      </Badge>
+                      <Badge className={getStatusClasses(ticket.status)}>{ticket.status}</Badge>
                     </TableCell>
-                    <TableCell>{ticket.created}</TableCell>
-                    <TableCell>{ticket.updated}</TableCell>
+                    <TableCell className="text-gray-700">{ticket.created}</TableCell>
+                    <TableCell className="text-gray-700">{ticket.updated}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <Button size="sm" className="bg-gray-200 text-black hover:bg-gray-300">View</Button>
+                        <Button size="sm" className="bg-gray-200 text-black hover:bg-gray-300">Edit</Button>
+                        <Button size="sm" className="bg-gray-200 text-black hover:bg-gray-300">Delete</Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -203,22 +203,14 @@ const Support = () => {
               </TableBody>
             </Table>
           </div>
+          
+          <div className="flex justify-center items-center gap-2 mt-4">
+              <Button variant="default" className="w-8 h-8" style={{backgroundColor: '#4B0082'}} >1</Button>
+              <Button variant="outline" className="w-8 h-8">2</Button>
+          </div>
+
         </CardContent>
       </Card>
-
-      {/* Pagination */}
-      <div className="flex justify-center">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-          >
-            1
-          </Button>
-          <Button variant="outline" size="sm">2</Button>
-        </div>
-      </div>
     </div>
   );
 };

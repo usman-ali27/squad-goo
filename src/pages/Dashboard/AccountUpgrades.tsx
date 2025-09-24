@@ -1,51 +1,13 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, Star, Crown, Award } from "lucide-react";
-
-const badgeFeatures = {
-  bronze: [
-    "Minimum 3 months registration",
-    "Accepted minimum 2 job offers (Financial or Squad)",
-    "Good badge displayed on profile with status",
-    "Profile listed higher on filtered rank view as volunteers",
-    "2FA code required for all job offers through platform",
-    "Accelerated rating count results",
-    "Up to 50 coins for each completed job offers",
-    "Free badge for all life once each qualified as bronze",
-    "Badge expires if profile rank drops"
-  ],
-  platinum: [
-    "Minimum 6 months registration",
-    "Accepted minimum 5 job offers (Financial or Squad)",
-    "Platinum badge displayed on profile with status",
-    "Profile listed higher on filtered rank view as volunteers",
-    "Premium features for job offers from top allocators",
-    "VIP event support (better than manual speed)",
-    "Accelerated rating count every 3 months",
-    "Up to 100 coins for each completed job offers",
-    "Badge expires if profile rank drops for 3 months",
-    "Up to 50 SG coins service for each referral"
-  ],
-  gold: [
-    "Minimum 12 months registration",
-    "Accepted minimum 10 job offers (Financial or Squad)",
-    "Gold badge displayed on profile with status",
-    "Profile listed higher on filtered rank view as volunteers",
-    "Advanced features for gold staff from both recruiters and individuals",
-    "VIP event support (better than manual speed)",
-    "Accelerated rating count every 3 months",
-    "Up to 150 SG coins service for each referral",
-    "Up to 100 SG coins service for each referral"
-  ]
-};
 
 const AccountUpgrades = () => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 shadow-md bg-white p-4 rounded-md">
       {/* Header */}
       <div className="text-center">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-8 px-6 rounded-xl">
+        <div className="bg-[#2A004E] text-white py-8 px-6 rounded-xl">
           <h1 className="text-3xl lg:text-4xl font-bold mb-2">ACCOUNT UPGRADES</h1>
           <p className="text-purple-100">
             Unlock premium features and showcase your professional credibility with our exclusive badge system
@@ -58,161 +20,147 @@ const AccountUpgrades = () => {
       </div>
 
       {/* Badge Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-8">
         {/* Bronze Badge */}
-        <Card className="relative overflow-hidden border-2 border-orange-200 hover:border-orange-300 transition-colors">
-          <CardHeader className="text-center bg-gradient-to-b from-orange-50 to-white">
-            <div className="mx-auto mb-4 p-3 bg-orange-100 rounded-full w-fit">
-              <Award className="h-8 w-8 text-orange-600" />
-            </div>
-            <CardTitle className="text-xl font-bold text-orange-600">BRONZE BADGE</CardTitle>
-            <div className="text-2xl font-bold">20 SG COINS</div>
+        <Card className="border-2 border-transparent hover:border-orange-300 transition-colors bg-[#F9F6F3] p-3 flex flex-col">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-bold text-[#D97706]">BRONZE BADGE</CardTitle>
+            <div className="text-2xl font-bold text-[#4F3F7C]">20 SG COINS</div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-orange-600 mb-2">Eligibility Requirements</h4>
-              <ul className="text-sm space-y-1">
-                <li>• Minimum 3 months registration</li>
-                <li>• Accepted minimum 2 job offers</li>
-                <li>• (Financial or Squad)</li>
+          <CardContent className="space-y-4 flex-grow">
+            <div className="bg-white p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">Eligibility Requirements</h4>
+              <ul className="text-sm space-y-1 text-gray-600">
+                <li>• Minimum 6 months registration</li>
+                <li>• Accepted minimum 2 job offers (manual or quick)</li>
               </ul>
             </div>
-            
+
             <div>
-              <h4 className="font-semibold text-orange-600 mb-2">Bronze Benefits</h4>
-              <ul className="text-sm space-y-1">
-                {badgeFeatures.bronze.slice(2, 6).map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <h4 className="font-semibold text-gray-800 mb-4 text-center">Bronze Benefits</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="bg-white p-3 rounded-lg text-center">Bronze badge displayed on profile card, visible to all recruiters</div>
+                <div className="bg-white p-3 rounded-lg text-center">Eligible for receiving payments of quick jobs through platform</div>
+                <div className="bg-white p-3 rounded-lg text-center">Acceptance rating reset annually</div>
+                <div className="bg-white p-3 rounded-lg text-center">Up to 5 SG coins for each successful referral</div>
+              </div>
             </div>
-            
+          </CardContent>
+          <div className="mt-auto pt-6">
             <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
               Apply For Bronze Badge
             </Button>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Platinum Badge */}
-        <Card className="relative overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-colors">
-          <CardHeader className="text-center bg-gradient-to-b from-gray-50 to-white">
-            <div className="mx-auto mb-4 p-3 bg-gray-100 rounded-full w-fit">
-              <Star className="h-8 w-8 text-gray-600" />
-            </div>
-            <CardTitle className="text-xl font-bold text-gray-600">PLATINUM BADGE</CardTitle>
-            <div className="text-2xl font-bold">99 SG COINS</div>
+        <Card className="border-2 border-transparent hover:border-gray-400 transition-colors bg-[#F9F6F3] p-3 flex flex-col">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-bold text-[#D97706]">PLATINUM BADGE</CardTitle>
+            <div className="text-2xl font-bold text-[#4F3F7C]">99 SG COINS</div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-gray-600 mb-2">Eligibility Requirements</h4>
-              <ul className="text-sm space-y-1">
+          <CardContent className="space-y-4 flex-grow">
+            <div className="bg-white p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">Eligibility Requirements</h4>
+              <ul className="text-sm space-y-1 text-gray-600">
                 <li>• Minimum 6 months registration</li>
-                <li>• Accepted minimum 5 job offers</li>
-                <li>• (Financial or Squad)</li>
+                <li>• Accepted minimum 4 job offers (manual or quick)</li>
               </ul>
             </div>
-            
+
             <div>
-              <h4 className="font-semibold text-gray-600 mb-2">Platinum Benefits</h4>
-              <ul className="text-sm space-y-1">
-                {badgeFeatures.platinum.slice(2, 6).map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <h4 className="font-semibold text-gray-800 mb-4 text-center">Platinum Benefits</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="bg-white p-3 rounded-lg text-center">Platinum badge displayed on profile card, visible to all</div>
+                <div className="bg-white p-3 rounded-lg text-center">Payments for quick jobs from both recruiters and individuals</div>
+                <div className="bg-white p-3 rounded-lg text-center">VIP level support (faster than normal users)</div>
+                <div className="bg-white p-3 rounded-lg text-center">Acceptance rating reset every 6 months</div>
+                <div className="bg-white p-3 rounded-lg text-center">Platinum level compensation for no-fault cancellations</div>
+                <div className="bg-white p-3 rounded-lg text-center">Up to 10 SG coins bonus on each referral</div>
+              </div>
             </div>
-            
-            <Button className="w-full bg-gray-500 hover:bg-gray-600 text-white">
+          </CardContent>
+          <div className="mt-auto pt-6">
+            <Button className="w-full bg-gray-400 hover:bg-gray-500 text-white">
               Apply For Platinum Badge
             </Button>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Gold Badge */}
-        <Card className="relative overflow-hidden border-2 border-yellow-300 hover:border-yellow-400 transition-colors">
-          <CardHeader className="text-center bg-gradient-to-b from-yellow-50 to-white">
-            <div className="mx-auto mb-4 p-3 bg-yellow-100 rounded-full w-fit">
-              <Crown className="h-8 w-8 text-yellow-600" />
-            </div>
-            <CardTitle className="text-xl font-bold text-yellow-600">GOLD BADGE</CardTitle>
-            <div className="text-2xl font-bold">199 SG COINS</div>
+        <Card className="border-2 border-transparent hover:border-yellow-400 transition-colors bg-[#F9F6F3] p-3 flex flex-col">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-bold text-[#D97706]">GOLD BADGE</CardTitle>
+            <div className="text-2xl font-bold text-[#4F3F7C]">199 SG COINS</div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-yellow-600 mb-2">Eligibility Requirements</h4>
-              <ul className="text-sm space-y-1">
+          <CardContent className="space-y-4 flex-grow">
+            <div className="bg-white p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">Eligibility Requirements</h4>
+              <ul className="text-sm space-y-1 text-gray-600">
                 <li>• Minimum 12 months registration</li>
-                <li>• Accepted minimum 10 job offers</li>
-                <li>• (Financial or Squad)</li>
+                <li>• Accepted minimum 10 job offers (manual or quick)</li>
               </ul>
             </div>
-            
+
             <div>
-              <h4 className="font-semibold text-yellow-600 mb-2">Gold Benefits</h4>
-              <ul className="text-sm space-y-1">
-                {badgeFeatures.gold.slice(2, 6).map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <h4 className="font-semibold text-gray-800 mb-4 text-center">Gold Benefits</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="bg-white p-3 rounded-lg text-center">Gold badge displayed on profile card, visible to all</div>
+                <div className="bg-white p-3 rounded-lg text-center">Payments for quick jobs from both recruiters and individuals</div>
+                <div className="bg-white p-3 rounded-lg text-center">VIP level support (faster than normal users)</div>
+                <div className="bg-white p-3 rounded-lg text-center">Acceptance rating reset every 4 months</div>
+                <div className="bg-white p-3 rounded-lg text-center">Up to 50 SG coins for no-fault cancellations</div>
+                <div className="bg-white p-3 rounded-lg text-center">Up to 20 SG coins bonus on each referral</div>
+              </div>
             </div>
-            
-            <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
+          </CardContent>
+          <div className="mt-auto pt-6">
+            <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
               Apply For Gold Badge
             </Button>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
       {/* Extra Purchases Section */}
-      <div>
-        <h2 className="text-2xl lg:text-3xl font-bold text-center text-orange-500 mb-2">Extra Purchases</h2>
-        <p className="text-center text-gray-600 mb-8">
-          These premium services are suggested to all users that has included in any badge membership
+      <div className="text-center mt-12">
+        <h2 className="text-2xl lg:text-3xl font-bold text-orange-500 mb-2">Extra Purchases</h2>
+        <p className="text-gray-600 text-sm">
+          These premium services are available to all users and are not included in any badge membership
         </p>
-
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader className="text-center">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl">Resume/Experience Verification</CardTitle>
-              <div className="text-2xl font-bold text-orange-500">50 SG COINS/year</div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h4 className="font-semibold mb-4">What You Get:</h4>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              </div>
-              <div className="mt-6 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-4/5"></div>
-              </div>
-            </div>
-            <div className="mt-6 text-center">
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8">
-                Purchase Verification Services
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      <Card className="max-w-4xl bg-[#f1ebeb] border-none mt-8">
+        <CardContent className="p-8">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl font-bold text-gray-800">Resume/Experience Verification</CardTitle>
+              <p className="text-gray-600 mt-2 max-w-lg">
+                Get your professional credentials verified and showcase your expertise with our comprehensive verification service. Stand out from the crowd with authenticated experience and qualifications.
+              </p>
+            </div>
+            <div className="text-xl font-bold text-orange-500">50 SG COINS/year</div>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 mt-6">
+            <h4 className="font-semibold text-blue-600 mb-4">What You Get:</h4>
+            <div className="space-y-3">
+              <div className="bg-[#F9F6F3] shadow-md p-4 rounded-lg">PRO Verification Badge displayed on your profile</div>
+              <div className="bg-[#F9F6F3] shadow-md p-4 rounded-lg">Each verified experience marked as "Verified" when viewed by recruiters</div>
+              <div className="bg-[#F9F6F3] shadow-md p-4 rounded-lg">Enhanced profile credibility and trust score</div>
+              <div className="bg-[#F9F6F3] shadow-md p-4 rounded-lg">Higher visibility in recruiter searches</div>
+            </div>
+
+            <div className="bg-ray-50 p-4 rounded-lg mt-6">
+              <strong>Validity:</strong> 12 months from purchase date. One-time annual expense with automatic renewal option.
+            </div>
+
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8">
+              Purchase verification Services
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

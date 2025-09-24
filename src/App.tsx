@@ -22,13 +22,14 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Layout components
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
-
 // Dashboard components
 const DashboardHome = lazy(() => import("./pages/Dashboard/DashboardHome"));
-const Settings = lazy(() => import("./pages/Dashboard/Settings"));
-const AccountUpgrades = lazy(() => import("./pages/Dashboard/AccountUpgrades"));
-const Support = lazy(() => import("./pages/Dashboard/Support"));
-
+import Settings from "./pages/Dashboard/Settings";
+import AccountUpgrades from "./pages/Dashboard/AccountUpgrades";
+import Support from "./pages/Dashboard/Support";
+import Wallet from "./pages/Dashboard/Wallet";
+import FindStaffPage from "./pages/Dashboard/FindStaff";
+import JobPool from "./pages/Dashboard/JobPool";
 // Profile components
 import ProfileLayout from "./pages/Profile/ProfileLayout";
 import BasicDetails from "./pages/Profile/BasicDetails";
@@ -40,9 +41,7 @@ import TaxInformation from "./pages/Profile/TaxInformation";
 import SocialMediaLinks from "./pages/Profile/SocialMediaLinks";
 import KYCVerification from "./pages/Profile/KYCVerification";
 import Documents from "./pages/Profile/Documents";
-import Wallet from "./pages/Dashboard/Wallet";
-import FindStaffPage from "./pages/Dashboard/FindStaff";
-import JobPool from "./pages/Dashboard/JobPool";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {

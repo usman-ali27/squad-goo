@@ -3,7 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, DollarSign, Settings, LifeBuoy, MessageSquare, Wallet, Users, Briefcase, BarChart2, Star, FileText } from "lucide-react";
 import { useUser } from "@/stores/authStore";
 
-const DashboardSidebar = () => {
+interface DashboardSidebarProps {
+  isOpen: boolean;
+}
+
+const DashboardSidebar = ({ isOpen }: DashboardSidebarProps) => {
   const location = useLocation();
   const user = useUser();
   const isRecruiter = user?.role === 'recruiter';
@@ -12,9 +16,9 @@ const DashboardSidebar = () => {
 
   const recruiterNav = [
     { name: "Dashboard", path: "/dashboard", icon: Home },
-    { name: "Account Upgrade", path: "/dashboard/account-upgrade", icon: Briefcase },
+    { name: "Account Upgrade", path: "/dashboard/upgrades", icon: Briefcase },
     { name: "Settings", path: "/dashboard/settings", icon: Settings },
-    { name: "Supports", path: "/dashboard/supports", icon: LifeBuoy },
+    { name: "Supports", path: "/dashboard/support", icon: LifeBuoy },
     { name: "Chat", path: "/dashboard/chat", icon: MessageSquare },
     { name: "Wallet", path: "/dashboard/wallet", icon: Wallet },
     { name: "Job Pool", path: "/dashboard/job-pool", icon: Wallet },
@@ -25,9 +29,9 @@ const DashboardSidebar = () => {
 
   const jobSeekerNav = [
     { name: "Dashboard", path: "/dashboard", icon: Home },
-    { name: "Account Upgrade", path: "/dashboard/account-upgrade", icon: Briefcase },
+    { name: "Account Upgrade", path: "/dashboard/upgrades", icon: Briefcase },
     { name: "Settings", path: "/dashboard/settings", icon: Settings },
-    { name: "Supports", path: "/dashboard/supports", icon: LifeBuoy },
+    { name: "Supports", path: "/dashboard/support", icon: LifeBuoy },
     { name: "Chat", path: "/dashboard/chat", icon: MessageSquare },
     { name: "Wallet", path: "/dashboard/wallet", icon: Wallet },
     { name: "Job Pool", path: "/dashboard/job-pool", icon: Wallet },
@@ -40,7 +44,7 @@ const DashboardSidebar = () => {
   const sidebarItems = isRecruiter ? recruiterNav : jobSeekerNav;
 
   return (
-    <aside className="w-[260px] bg-gray-100 border-r flex flex-col justify-between">
+    <aside className={`w-[260px] bg-gray-100 border-r flex-col justify-between md:flex ${isOpen ? 'flex' : 'hidden'}`}>
       <nav className="p-4">
         <ul>
           {sidebarItems.map((item) => (

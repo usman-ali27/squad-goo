@@ -27,7 +27,7 @@ const DashboardHome = () => {
           </div>
           <Button className="bg-primary hover:bg-primary/90">
             <Search className="h-4 w-4 mr-2" />
-            Find Jobs
+            Find Job
           </Button>
         </div>
 

@@ -42,6 +42,7 @@ import KYCVerification from "./pages/Profile/KYCVerification";
 import Documents from "./pages/Profile/Documents";
 import Wallet from "./pages/Dashboard/Wallet";
 import FindStaffPage from "./pages/Dashboard/FindStaff";
+import JobPool from "./pages/Dashboard/JobPool";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,7 +97,7 @@ const router = createBrowserRouter([
           { index: true, element: <DashboardHome /> },
           { path: "find-jobs", element: <div className="p-8 text-center">Find Jobs Page Coming Soon</div> },
           { path: "find-staff", element: <FindStaffPage />},
-          { path: "job-pool", element: <div className="p-8 text-center">Job Pool Page Coming Soon</div> },
+          { path: "job-pool", element: <JobPool /> },
           { path: "applications", element: <div className="p-8 text-center">Applications Page Coming Soon</div> },
           { path: "candidates", element: <div className="p-8 text-center">Candidates Page Coming Soon</div> },
           { path: "chat", element: <div className="p-8 text-center">Messages Page Coming Soon</div> },

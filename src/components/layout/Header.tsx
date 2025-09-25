@@ -114,6 +114,10 @@ const Header = () => {
                 <Button variant="orange-outline" size="sm"> Jobseeker </Button>
             </Link>
 
+            <Link to="/marketplace">
+                <Button variant="default" size="sm"> Marketplace </Button>
+            </Link>
+
             {isAuthenticated ? (
                 <>
                     <Link to="/dashboard">

@@ -28,6 +28,11 @@ All colors MUST be HSL.
     --accent-foreground: 0 0% 100%;
     --accent-hover: 22 89% 45%;
 
+    /* Purple accent color */
+    --purple: 260 65% 55%;
+    --purple-foreground: 0 0% 100%;
+    --purple-hover: 260 65% 50%;
+
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
@@ -87,6 +92,10 @@ All colors MUST be HSL.
 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+
+    --purple: 260 65% 55%;
+    --purple-foreground: 0 0% 100%;
+    --purple-hover: 260 65% 65%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;

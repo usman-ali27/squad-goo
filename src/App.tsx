@@ -13,24 +13,36 @@ import LoadingSpinner from "./components/ui/LoadingSpinner";
 import ErrorFallback from "./components/ui/ErrorFallback";
 import PrivateRoute from "./components/ui/PrivateRoute";
 
-// Lazy load pages for better performance
+// Lazy load pages
 const HomePage = lazy(() => import("./pages/Home/HomePage"));
 const Login = lazy(() => import("./pages/Auth/Login"));
 const Register = lazy(() => import("./pages/Auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/Auth/ForgotPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Layout components
+// Layouts
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
-// Dashboard components
+const MarketplaceLayout = lazy(() => import("./components/layout/MarketplaceLayout"));
+
+// Dashboard Pages
 const DashboardHome = lazy(() => import("./pages/Dashboard/DashboardHome"));
-import Settings from "./pages/Dashboard/Settings";
-import AccountUpgrades from "./pages/Dashboard/AccountUpgrades";
-import Support from "./pages/Dashboard/Support";
-import Wallet from "./pages/Dashboard/Wallet";
-import FindStaffPage from "./pages/Dashboard/FindStaff";
-import JobPool from "./pages/Dashboard/JobPool";
-// Profile components
+const Settings = lazy(() => import("./pages/Dashboard/Settings"));
+const AccountUpgrades = lazy(() => import("./pages/Dashboard/AccountUpgrades"));
+const Support = lazy(() => import("./pages/Dashboard/Support"));
+const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
+const FindStaffPage = lazy(() => import("./pages/Dashboard/FindStaff"));
+const JobPool = lazy(() => import("./pages/Dashboard/JobPool"));
+
+// Marketplace Pages
+const MarketplaceDashboard = lazy(() => import("./pages/Marketplace/Dashboard"));
+const BuyNow = lazy(() => import("./pages/Marketplace/BuyNow"));
+const ListNow = lazy(() => import("./pages/Marketplace/ListNow"));
+const MarketplaceWallet = lazy(() => import("./pages/Marketplace/Wallet"));
+const MarketplaceChat = lazy(() => import("./pages/Marketplace/Chat"));
+const MarketplaceSupport = lazy(() => import("./pages/Marketplace/Support"));
+import CreateNewListingForm from "./pages/Marketplace/CreateNewListingForm";
+import ManageListings from "./pages/Marketplace/ManageListings";
+// Profile Pages
 import ProfileLayout from "./pages/Profile/ProfileLayout";
 import BasicDetails from "./pages/Profile/BasicDetails";
 import CompanyDetails from "./pages/Profile/CompanyDetails";
@@ -41,7 +53,6 @@ import TaxInformation from "./pages/Profile/TaxInformation";
 import SocialMediaLinks from "./pages/Profile/SocialMediaLinks";
 import KYCVerification from "./pages/Profile/KYCVerification";
 import Documents from "./pages/Profile/Documents";
-
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,7 +87,7 @@ const router = createBrowserRouter([
           { path: "documents", element: <Documents /> },
         ],
       },
-      {
+       {
         path: "about",
         element: <div className="p-8 min-h-screen flex items-center justify-center">About Us - Coming Soon</div>,
       },
@@ -106,6 +117,25 @@ const router = createBrowserRouter([
           { path: "support", element: <Support /> },
         ],
       },
+      {
+        path: "/marketplace",
+        element: <MarketplaceLayout />,
+        children: [
+          { index: true, element: <MarketplaceDashboard /> },
+          { path: "buy", element: <BuyNow /> },
+          {
+            path: "list",
+            element: <ListNow />,
+            children: [
+              { path: "new", element: <CreateNewListingForm /> },
+              { path: "manage", element: <ManageListings /> },
+            ]
+          },
+          { path: "wallet", element: <MarketplaceWallet /> },
+          { path: "chat", element: <MarketplaceChat /> },
+          { path: "support", element: <MarketplaceSupport /> },
+        ]
+      }
     ],
   },
   { path: "*", element: <NotFound /> },

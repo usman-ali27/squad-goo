@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import {
   createBrowserRouter,
@@ -23,6 +24,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Layouts
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
 const MarketplaceLayout = lazy(() => import("./components/layout/MarketplaceLayout"));
+const SquadLayout = lazy(() => import("./components/layout/squad/SquadLayout"));
 
 // Dashboard Pages
 const DashboardHome = lazy(() => import("./pages/Dashboard/DashboardHome"));
@@ -42,6 +44,7 @@ const MarketplaceChat = lazy(() => import("./pages/Marketplace/Chat"));
 const MarketplaceSupport = lazy(() => import("./pages/Marketplace/Support"));
 import CreateNewListingForm from "./pages/Marketplace/CreateNewListingForm";
 import ManageListings from "./pages/Marketplace/ManageListings";
+
 // Profile Pages
 import ProfileLayout from "./pages/Profile/ProfileLayout";
 import BasicDetails from "./pages/Profile/BasicDetails";
@@ -53,6 +56,13 @@ import TaxInformation from "./pages/Profile/TaxInformation";
 import SocialMediaLinks from "./pages/Profile/SocialMediaLinks";
 import KYCVerification from "./pages/Profile/KYCVerification";
 import Documents from "./pages/Profile/Documents";
+
+// Squad Pages
+const SquadDashboard = lazy(() => import("./pages/Squad/SquadDashboard"));
+import SquadSettings from "./pages/Squad/SquadSettings";
+import SquadChat from "./pages/Squad/SquadChat";
+import SquadWallet from "./pages/Squad/SquadWallet";
+import SquadProfile from "./pages/Squad/SquadProfile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -135,7 +145,18 @@ const router = createBrowserRouter([
           { path: "chat", element: <MarketplaceChat /> },
           { path: "support", element: <MarketplaceSupport /> },
         ]
-      }
+      },
+      {
+        path: "/squad-dashboard",
+        element: <SquadLayout />,
+        children: [
+          { index: true, element: <SquadDashboard /> },
+          { path: "settings", element: <SquadSettings /> },
+          { path: "chat", element: <SquadChat /> },
+          { path: "wallet", element: <SquadWallet /> },
+          { path: "profile", element: <SquadProfile /> },
+        ],
+      },
     ],
   },
   { path: "*", element: <NotFound /> },

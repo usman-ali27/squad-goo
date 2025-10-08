@@ -1,4 +1,3 @@
-
 import apiClient from './apiService';
 
 export interface Preference {
@@ -21,9 +20,9 @@ export interface PreferencePayload {
 }
 
 export const getJobSeekerPreferences = (jobSeekerId: number) => {
-  return apiClient.get(`/api/jobseeker/${jobSeekerId}/preferences`);
+  return apiClient.get(`/jobseeker/${jobSeekerId}/preferences`);
 };
 
 export const saveJobSeekerPreferences = (payload: PreferencePayload) => {
-  return apiClient.post('/api/jobseeker/preferences', payload);
+  return apiClient.post('/jobseeker/preferences', payload);
 };

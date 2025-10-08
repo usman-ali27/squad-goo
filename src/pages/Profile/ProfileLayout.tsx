@@ -9,10 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useAuthActions } from '@/stores/authStore';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getProfile, uploadProfilePicture } from '@/services/profileService';
 import { ProfileDataContext } from '@/contexts/ProfileDataContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const recruiterNavItems = [
   { name: "Basic Details", href: "/profile" },
@@ -80,49 +82,51 @@ const ProfileLayout = () => {
   const { updateUser } = useAuthActions();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [profileData, setProfileData] = useState(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (user) {
-      const fetchProfileData = async () => {
-        try {
-          const response = await getProfile(user.role, user.id);
-          setProfileData(response.data.data);
-        } catch (error) {
-          console.error("Failed to fetch profile data", error);
-        }
-      };
-      fetchProfileData();
+  const { data: profileData, isLoading, isError } = useQuery({
+    queryKey: ['profile', user?.role, user?.id],
+    queryFn: () => getProfile(user!.role, user!.id),
+    enabled: !!user,
+    select: (response) => response.data.data,
+    retry: 1,
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: ({ role, id, file }: { role: string; id: number; file: File }) => uploadProfilePicture(role, id, file),
+    onSuccess: (response) => {
+      const newImageUrl = response.data.url;
+      updateUser({ profile_picture: newImageUrl });
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.role, user?.id] });
+      toast({ title: "Success", description: "Profile picture updated successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to upload profile picture.", variant: "destructive" });
     }
-  }, [user]);
+  });
 
-  if (!user) {
-    return <div>Loading user profile...</div>;
+  if (isLoading) {
+    return <LoadingSpinner text="Loading Profile..." />;
+  }
+
+  if (isError || !user) {
+    return <div className='text-center p-8'>Could not load user profile. Please try again later.</div>;
   }
   
   const getDisplayName = () => {
     if (!profileData) return user.name;
-
     const roleData = profileData[user.role];
     if (roleData) {
-      if (roleData.first_name && roleData.last_name) {
-        return `${roleData.first_name} ${roleData.last_name}`;
-      }
-      if (roleData.company_name) {
-        return roleData.company_name;
-      }
+      if (roleData.first_name && roleData.last_name) return `${roleData.first_name} ${roleData.last_name}`;
+      if (roleData.company_name) return roleData.company_name;
     }
-    
     return user.name;
   };
 
   const getInitials = (name: string) => {
     if (!name) return "";
     const nameParts = name.trim().split(/\s+/);
-    if (nameParts.length > 1) {
-        return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
-    }
+    if (nameParts.length > 1) return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
     return nameParts[0].substring(0, 2).toUpperCase();
   };
 
@@ -130,40 +134,21 @@ const ProfileLayout = () => {
       fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (file && user && user.id && user.role) {
-          setIsUploading(true);
-          try {
-              const response = await uploadProfilePicture(user.role, user.id, file);
-              const newImageUrl = response.data.url;
-              updateUser({ profile_picture: newImageUrl });
-              toast({ title: "Success", description: "Profile picture updated successfully." });
-          } catch (error) {
-              toast({ title: "Error", description: "Failed to upload profile picture.", variant: "destructive" });
-          } finally {
-              setIsUploading(false);
-          }
+        uploadMutation.mutate({ role: user.role, id: user.id, file });
       }
   };
 
-  const headerBgImage = user.role === 'recruiter'
-    ? `url(/assets/images/recurities.jpeg)`
-    : `url(/assets/images/employer.jpeg)`;
-
+  const headerBgImage = user.role === 'recruiter' ? `url(/assets/images/recurities.jpeg)` : `url(/assets/images/employer.jpeg)`;
   const isKycPage = location.pathname === '/profile/kyc';
   
-  let navItems;
-  if (user.role === 'recruiter') {
-    navItems = recruiterNavItems;
-  } else if (user.role === 'job_seeker') {
-    navItems = jobSeekerNavItems;
-  } else {
-    navItems = individualNavItems;
-  }
+  const navItems = user.role === 'recruiter' ? recruiterNavItems : user.role === 'job_seeker' ? jobSeekerNavItems : individualNavItems;
 
-  const userPhone = user.role === 'job_seeker' ? user.job_seeker?.phone : null;
+  const userPhone = user.role === 'job_seeker' ? profileData?.job_seeker?.phone : null;
   const displayName = getDisplayName();
+  const profilePicture = profileData?.[user.role]?.profile_picture || user.profile_picture;
 
   return (
     <ProfileDataContext.Provider value={profileData}>
@@ -177,27 +162,22 @@ const ProfileLayout = () => {
             <div className="flex flex-col items-center lg:flex-row lg:items-start gap-6 sm:gap-8">
               {/* Profile Avatar */}
               <div className="relative">
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                 <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-xl">
-                  <AvatarImage src={user.profile_picture || '/placeholder.svg'} alt={displayName} />
+                  <AvatarImage src={profilePicture || '/placeholder.svg'} alt={displayName} />
                   <AvatarFallback className="text-xl sm:text-2xl bg-white text-orange-600 font-bold">
                     {getInitials(displayName)}
                   </AvatarFallback>
                 </Avatar>
-                <Button size="icon" onClick={handleAvatarClick} className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100" disabled={isUploading}>
-                  {isUploading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div> : <Camera className="h-4 w-4" />}
+                <Button size="icon" onClick={handleAvatarClick} className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-white text-primary hover:bg-gray-100" disabled={uploadMutation.isPending}>
+                  {uploadMutation.isPending ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div> : <Camera className="h-4 w-4" />}
                 </Button>
               </div>
 
               {/* Profile Info */}
               <div className="flex-1 space-y-2 text-center lg:text-left">
-                {/* Name */}
                 <h1 className="text-2xl sm:text-3xl font-bold">{displayName}</h1>
-
-                {/* Info Row */}
                 <div className="flex flex-col lg:flex-row lg:justify-between gap-6">
-
-                  {/* Left Side: Email + Phone */}
                   <div className="flex flex-row lg:flex-col items-center lg:items-start text-sm text-white/80 gap-2 lg:gap-1">
                     <p className="text-white/80">{user.email}</p>
                     {userPhone && (
@@ -207,42 +187,26 @@ const ProfileLayout = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Right Side: Review + Badges */}
                   <div className="flex flex-row lg:flex-col items-center lg:items-end gap-4 lg:gap-2">
-                    {/* Rating */}
                     <div className="flex items-center space-x-2">
-                      {/* Stars */}
                       <div className="flex items-center space-x-1">
                         {[1, 2, 3, 4].map((star) => (
                           <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         ))}
                         <Star className="h-4 w-4 text-white/50" />
                       </div>
-
-                      {/* Divider + Review Count */}
                       <span className="border-l border-white/40 pl-2 text-sm font-medium">
                         4 Review
                       </span>
                     </div>
-
-
-                    {/* Badges */}
                     <div className="flex flex-row items-center gap-2">
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                        Main Account
-                      </Badge>
-
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">Main Account</Badge>
                       <Switch className="data-[state=checked]:bg-green-500" />
-
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                        Squad Account
-                      </Badge>
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">Squad Account</Badge>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -250,7 +214,6 @@ const ProfileLayout = () => {
         {/* Main Content Area */}
         <div className="w-[85%] mx-auto mt-[-64px]">
           <div className="lg:grid lg:grid-cols-4 lg:gap-8">
-            {/* Left Sidebar Navigation */}
             <div className="lg:col-span-1 mb-6">
                <div className="sticky top-20">
                   <div className="bg-white rounded-xl shadow-lg p-4">
@@ -278,7 +241,6 @@ const ProfileLayout = () => {
               </div>
             </div>
 
-            {/* Right Content */}
             <div className="lg:col-span-3 mt-6 mb-6 lg:mt-0">
               <div className="bg-white rounded-xl shadow-lg min-h-[600px] p-4 sm:p-6">
                 <Outlet />

@@ -27,26 +27,28 @@ const MarketplaceLayout = lazy(() => import("./components/layout/MarketplaceLayo
 const SquadLayout = lazy(() => import("./components/layout/squad/SquadLayout"));
 
 // Dashboard Pages
-const DashboardHome = lazy(() => import("./pages/Dashboard/DashboardHome"));
-const Settings = lazy(() => import("./pages/Dashboard/Settings"));
-const AccountUpgrades = lazy(() => import("./pages/Dashboard/AccountUpgrades"));
-const Support = lazy(() => import("./pages/Dashboard/Support"));
-const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
-const FindStaffPage = lazy(() => import("./pages/Dashboard/FindStaff"));
-const JobPool = lazy(() => import("./pages/Dashboard/JobPool"));
+import DashboardHome from "./pages/Dashboard/DashboardHome";
+import FindStaffPage from "./pages/Dashboard/FindStaff";
+import JobPool from "./pages/Dashboard/JobPool";
+import AccountUpgrades from "./pages/Dashboard/AccountUpgrades";
+import Support from "./pages/Dashboard/Support";
+import Settings from "./pages/Dashboard/Settings";
+import Wallet from "./pages/Dashboard/Wallet";
+import TicketForm from "./pages/Dashboard/TicketForm"; 
+import TicketView from "./pages/Dashboard/TicketView";
 
 // Marketplace Pages
 const MarketplaceDashboard = lazy(() => import("./pages/Marketplace/Dashboard"));
-const BuyNow = lazy(() => import("./pages/Marketplace/BuyNow"));
-const ListNow = lazy(() => import("./pages/Marketplace/ListNow"));
-const MarketplaceWallet = lazy(() => import("./pages/Marketplace/Wallet"));
-const MarketplaceChat = lazy(() => import("./pages/Marketplace/Chat"));
-const MarketplaceSupport = lazy(() => import("./pages/Marketplace/Support"));
+import BuyNow from "./pages/Marketplace/BuyNow";
+import ListNow from "./pages/Marketplace/ListNow";
+import MarketplaceWallet from "./pages/Marketplace/Wallet";
+import MarketplaceChat from "./pages/Marketplace/Chat";
+import MarketplaceSupport from "./pages/Marketplace/Support";
 import CreateNewListingForm from "./pages/Marketplace/CreateNewListingForm";
 import ManageListings from "./pages/Marketplace/ManageListings";
 
 // Profile Pages
-import ProfileLayout from "./pages/Profile/ProfileLayout";
+const ProfileLayout = lazy(() => import("./pages/Profile/ProfileLayout"));
 import BasicDetails from "./pages/Profile/BasicDetails";
 import CompanyDetails from "./pages/Profile/CompanyDetails";
 import JobExperience from "./pages/Profile/JobExperience";
@@ -124,7 +126,15 @@ const router = createBrowserRouter([
           { path: "wallet", element: <Wallet /> },
           { path: "settings", element: <Settings /> },
           { path: "upgrades", element: <AccountUpgrades /> },
-          { path: "support", element: <Support /> },
+          { 
+            path: "support",
+            children: [
+              { index: true, element: <Support /> },
+              { path: "create", element: <TicketForm /> },
+              { path: "edit/:ticketId", element: <TicketForm /> },
+              { path: "view/:ticketId", element: <TicketView /> }, 
+            ]
+          },
         ],
       },
       {

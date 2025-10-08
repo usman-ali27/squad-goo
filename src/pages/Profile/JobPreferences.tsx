@@ -1,7 +1,7 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,27 +13,32 @@ import { useUser } from "@/stores/authStore";
 import { getJobSeekerPreferences, saveJobSeekerPreferences, Preference, PreferencePayload } from "@/services/preferenceService";
 import { AnimatePresence, motion } from "framer-motion";
 import { industries } from "@/constants/industries";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const JobPreferences = () => {
   const { toast } = useToast();
   const user = useUser();
+  const queryClient = useQueryClient();
+
   const [preferences, setPreferences] = useState<Preference[]>([]);
   const [errors, setErrors] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
   const payRateInputsRef = useRef<Record<string, { pay_min: number; pay_max: number }>>({});
 
   const availabilityDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const offerTypes = ["Manual", "Quick"];
   const taxOptions = ["TFN", "ABN"];
 
-  const fetchPreferences = useCallback(async () => {
-    if (!user?.job_seeker) return;
-    setIsFetching(true);
-    try {
-      const response = await getJobSeekerPreferences(user.job_seeker.id);
-      if (response.data && response.data.data.length > 0) {
-        const fetchedPreferences = response.data.data.map((pref: any, index: number) => {
+  const jobSeekerId = user?.job_seeker?.id;
+
+  const { data: fetchedPreferences, isLoading: isLoadingPreferences } = useQuery({
+    queryKey: ['preferences', jobSeekerId],
+    queryFn: () => getJobSeekerPreferences(jobSeekerId!),
+    enabled: !!jobSeekerId,
+    select: (response) => response.data.data || [],
+    onSuccess: (data) => {
+      if (data.length > 0) {
+        const fetchedPreferences = data.map((pref: any, index: number) => {
           payRateInputsRef.current[index] = { pay_min: parseFloat(pref.pay_min) || 0, pay_max: parseFloat(pref.pay_max) || 0 };
           return {
             ...pref,
@@ -47,22 +52,52 @@ const JobPreferences = () => {
       } else {
         handleAddPreference();
       }
-    } catch (error) {
+    },
+    onError: () => {
       toast({
         title: "Error fetching preferences",
         description: "Could not load your job preferences. Please try again later.",
         variant: "destructive",
       });
       handleAddPreference();
-    } finally {
-      setIsFetching(false);
-    }
-  }, [user?.job_seeker?.id, toast]);
+    },
+  });
 
   useEffect(() => {
-    fetchPreferences();
-  }, [fetchPreferences]);
+    if (fetchedPreferences) {
+        if (fetchedPreferences.length > 0) {
+            const parsedPreferences = fetchedPreferences.map((pref: any, index: number) => {
+                payRateInputsRef.current[index] = { pay_min: parseFloat(pref.pay_min) || 0, pay_max: parseFloat(pref.pay_max) || 0 };
+                return {
+                    ...pref,
+                    pay_min: parseFloat(pref.pay_min) || 0,
+                    pay_max: parseFloat(pref.pay_max) || 0,
+                    days: pref.days ? (typeof pref.days === 'string' ? JSON.parse(pref.days) : pref.days) : [],
+                    offer_types: pref.offer_types ? (typeof pref.offer_types === 'string' ? JSON.parse(pref.offer_types) : pref.offer_types) : [],
+                };
+            });
+            setPreferences(parsedPreferences);
+        } else {
+            handleAddPreference();
+        }
+    }
+}, [fetchedPreferences]);
 
+
+  const saveMutation = useMutation({
+    mutationFn: (payload: PreferencePayload) => saveJobSeekerPreferences(payload),
+    onSuccess: () => {
+      toast({ title: "Preferences Saved", description: "Your job preferences have been updated successfully." });
+      queryClient.invalidateQueries({ queryKey: ['preferences', jobSeekerId] });
+    },
+    onError: (error: any) => {
+        if (error.response && error.response.data && error.response.data.errors) {
+            toast({ title: "Save Failed", description: "There were errors in your submission.", variant: "destructive" });
+        } else {
+            toast({ title: "Save Error", description: "Could not save your preferences. Please try again.", variant: "destructive" });
+        }
+    },
+  });
 
   const handleAddPreference = () => {
     const newIndex = preferences.length;
@@ -96,19 +131,16 @@ const JobPreferences = () => {
     const currentPreference = { ...newPreferences[index], [field]: value };
 
     if (field === 'pay_min' || field === 'pay_max') {
-      const payMin = field === 'pay_min' ? value : currentPreference.pay_min;
-      const payMax = field === 'pay_max' ? value : currentPreference.pay_max;
-      const prevPayMin = payRateInputsRef.current[index]?.pay_min;
-      const prevPayMax = payRateInputsRef.current[index]?.pay_max;
+        const payMin = field === 'pay_min' ? parseFloat(value) || 0 : currentPreference.pay_min;
+        const payMax = field === 'pay_max' ? parseFloat(value) || 0 : currentPreference.pay_max;
 
-      if (payMin && payMax && parseFloat(payMin) > parseFloat(payMax)) {
-        if (field === 'pay_min' && value !== prevPayMin) {
-            currentPreference.pay_max = payMin;
-        } else if (field === 'pay_max' && value !== prevPayMax) {
-            currentPreference.pay_min = payMax;
+        if (payMin && payMax && payMin > payMax) {
+            if (field === 'pay_min') {
+                currentPreference.pay_max = payMin;
+            } else {
+                currentPreference.pay_min = payMax;
+            }
         }
-      }
-      payRateInputsRef.current[index] = { pay_min: currentPreference.pay_min, pay_max: currentPreference.pay_max };
     }
     
     (newPreferences[index] as any) = currentPreference;
@@ -149,8 +181,7 @@ const JobPreferences = () => {
     return isValid;
   };
 
-
-  const handleSavePreferences = async () => {
+  const handleSavePreferences = () => {
     if (!validate()) {
       toast({
         title: "Validation Error",
@@ -160,57 +191,26 @@ const JobPreferences = () => {
       return;
     }
 
-    if (!user?.job_seeker?.id) {
+    if (!jobSeekerId) {
       toast({ title: "Authentication Error", description: "Could not verify user.", variant: "destructive" });
       return;
     }
 
-    setIsLoading(true);
-
     const payload: PreferencePayload = {
-      jobseeker_id: user?.job_seeker?.id,
+      jobseeker_id: jobSeekerId,
       preferences: preferences,
     };
 
-    try {
-      await saveJobSeekerPreferences(payload);
-      toast({
-        title: "Preferences Saved",
-        description: "Your job preferences have been updated successfully.",
-      });
-      // Refetch to get IDs for newly created preferences
-      fetchPreferences();
-    } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.errors) {
-        // Handle validation errors from backend
-        const backendErrors = error.response.data.errors;
-        // You might want to map these to your errors state
-        toast({
-          title: "Save Failed",
-          description: "There were errors in your submission.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Save Error",
-          description: "Could not save your preferences. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    saveMutation.mutate(payload);
   };
 
-  if (isFetching) {
-    return (
-      <div className="flex items-center justify-center h-40">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2 text-foreground">Loading your preferences...</p>
-      </div>
-    );
+  if (isLoadingPreferences) {
+    return <LoadingSpinner text="Loading your preferences..." />;
   }
 
+  if (user?.role !== 'job_seeker') {
+    return <div className="p-4">This section is for job seekers only.</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -253,15 +253,14 @@ const JobPreferences = () => {
       </Card>
 
       <div className="flex justify-end pt-4">
-        <Button size="lg" onClick={handleSavePreferences} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
-          {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save All Preferences</>}
+        <Button size="lg" onClick={handleSavePreferences} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={saveMutation.isPending}>
+          {saveMutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save All Preferences</>}
         </Button>
       </div>
     </div>
   );
 };
 
-// Sub-component for individual preference cards
 interface PreferenceCardProps {
   preference: Preference;
   index: number;

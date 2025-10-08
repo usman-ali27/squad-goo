@@ -17,11 +17,18 @@ import {
   Bell,
   Shield, 
   LifeBuoy,
-  AlertTriangle
+  AlertTriangle,
+  Save
 } from "lucide-react";
 import FindAStaff from "./FindAStaff";
+import { updateJobSeekerSettings, JobSeekerSettingsPayload } from "@/services/settingsService";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 const JobSeekerSettings = () => {
+  const { toast } = useToast();
+  const user = useUser();
   const [activeTab, setActiveTab] = useState("job");
   const [date, setDate] = useState<Date>();
 
@@ -54,6 +61,45 @@ const JobSeekerSettings = () => {
     pushNotifications: true,
     emailNotifications: true,
   });
+
+  const mutation = useMutation({
+    mutationFn: updateJobSeekerSettings,
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.data.message || "Your settings have been updated successfully.",
+      });
+    },
+    onError: (error: AxiosError<{ message: string }>) => {
+      const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    if (!user || user.role !== 'job_seeker') return;
+
+    const payload: JobSeekerSettingsPayload = {
+      offer_preference_type: "both",
+      offer_from_preference: "both",
+      quick_offer_only_platform_payment: quickOfferSettings.directPayments,
+      quick_offer_only_full_balance: quickOfferSettings.enoughBalance,
+      quick_offer_only_from_pro: quickOfferSettings.proRecruiter,
+      manual_offer_only_from_pro: manualOfferSettings.proRecruiter,
+      individual_offer_only_from_pro: individualOfferSettings.proRecruiter,
+      individual_offer_only_platform_payment: individualOfferSettings.platformPayments,
+      individual_offer_industries: Object.entries(selectedIndustries)
+        .filter(([, checked]) => checked)
+        .map(([key]) => key),
+      jobseeker_id: user.id,
+    };
+
+    mutation.mutate(payload);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -273,6 +319,11 @@ const JobSeekerSettings = () => {
           </div>
         </CardContent>
       </Card>
+       <div className="flex justify-end pt-6">
+        <Button onClick={handleSave} variant="orange" className="px-8" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+        </Button>
+      </div>
     </div>
   );
 

@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Home, DollarSign, Settings, LifeBuoy, MessageSquare, Wallet, Users, Briefcase, BarChart2, Star, FileText } from "lucide-react";
 import { useUser } from "@/stores/authStore";
 
@@ -8,38 +8,31 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar = ({ isOpen }: DashboardSidebarProps) => {
-  const location = useLocation();
   const user = useUser();
   const isRecruiter = user?.role === 'recruiter';
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
-
   const recruiterNav = [
-    { name: "Dashboard", path: "/dashboard", icon: Home },
-    { name: "Account Upgrade", path: "/dashboard/upgrades", icon: Briefcase },
-    { name: "Settings", path: "/dashboard/settings", icon: Settings },
-    { name: "Supports", path: "/dashboard/support", icon: LifeBuoy },
+    { name: "Dashboard", path: "/dashboard", icon: Home, end: true },
+    { name: "Find Staff", path: "/dashboard/find-staff", icon: Users },
+    { name: "Job Pool", path: "/dashboard/job-pool", icon: Briefcase },
+    { name: "Applications", path: "/dashboard/applications", icon: FileText },
+    { name: "Candidates", path: "/dashboard/candidates", icon: Users },
     { name: "Chat", path: "/dashboard/chat", icon: MessageSquare },
     { name: "Wallet", path: "/dashboard/wallet", icon: Wallet },
-    { name: "Job Pool", path: "/dashboard/job-pool", icon: Wallet },
-    { name: "Timesheets", path: "/dashboard/timesheets", icon: FileText },
-    { name: "Reports", path: "/dashboard/reports", icon: DollarSign },
-    { name: "Marketplace", path: "/dashboard/marketplace", icon: Star },
+    { name: "Account Upgrade", path: "/dashboard/upgrades", icon: Star },
+    { name: "Settings", path: "/dashboard/settings", icon: Settings },
+    { name: "Support", path: "/dashboard/support", icon: LifeBuoy },
   ];
 
   const jobSeekerNav = [
-    { name: "Dashboard", path: "/dashboard", icon: Home },
-    { name: "Account Upgrade", path: "/dashboard/upgrades", icon: Briefcase },
-    { name: "Settings", path: "/dashboard/settings", icon: Settings },
-    { name: "Supports", path: "/dashboard/support", icon: LifeBuoy },
+    { name: "Dashboard", path: "/dashboard", icon: Home, end: true },
+    { name: "Find Jobs", path: "/dashboard/find-jobs", icon: Briefcase },
+    { name: "Applications", path: "/dashboard/applications", icon: FileText },
     { name: "Chat", path: "/dashboard/chat", icon: MessageSquare },
     { name: "Wallet", path: "/dashboard/wallet", icon: Wallet },
-    { name: "Job Pool", path: "/dashboard/job-pool", icon: Wallet },
-    { name: "Timesheets", path: "/dashboard/timesheets", icon: FileText },
-    { name: "Reports", path: "/dashboard/reports", icon: DollarSign },
-    { name: "Marketplace", path: "/dashboard/marketplace", icon: Star },
+    { name: "Settings", path: "/dashboard/settings", icon: Settings },
+    { name: "Support", path: "/dashboard/support", icon: LifeBuoy },
   ];
-
 
   const sidebarItems = isRecruiter ? recruiterNav : jobSeekerNav;
 
@@ -49,15 +42,19 @@ const DashboardSidebar = ({ isOpen }: DashboardSidebarProps) => {
         <ul>
           {sidebarItems.map((item) => (
             <li key={item.name} className={`mb-1`}>
-              <Link
+              <NavLink
                 to={item.path}
-                className={`flex items-center p-3 text-sm font-medium rounded-lg transition-colors ${isActive(item.path)
-                    ? "bg-white shadow-md text-gray-900 font-semibold"
-                    : "text-gray-600 hover:bg-gray-50"
-                  }`}>
+                end={item.end}
+                className={({ isActive }) =>
+                  `flex items-center p-3 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-white shadow-md text-gray-900 font-semibold"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`
+                }>
                 <item.icon className="w-5 h-5 mr-4" />
                 {item.name}
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>

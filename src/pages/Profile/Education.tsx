@@ -8,31 +8,51 @@ import { Plus, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/stores/authStore";
 import { getJobSeekerEducation, saveJobSeekerEducation } from "@/services/educationService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const Education = () => {
   const { toast } = useToast();
   const user = useUser();
+  const queryClient = useQueryClient();
+
   const [education, setEducation] = useState<any[]>([]);
   const [errors, setErrors] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const jobSeekerId = user?.job_seeker?.id;
+
+  const { data: fetchedEducation, isLoading: isLoadingEducation } = useQuery({
+    queryKey: ['education', jobSeekerId],
+    queryFn: () => getJobSeekerEducation(jobSeekerId!),
+    enabled: !!jobSeekerId,
+    select: (response) => response.data.data || [],
+    onSuccess: (data) => {
+      setEducation(data);
+      setErrors(data.map(() => ({})));
+    },
+  });
 
   useEffect(() => {
-    if (user && user.job_seeker) {
-      setIsLoading(true);
-      getJobSeekerEducation(user.job_seeker.id)
-        .then(response => {
-          const eduData = response.data.data || [];
-          setEducation(eduData);
-          setErrors(eduData.map(() => ({})));
-        })
-        .catch(() => {
-          toast({ title: "Error", description: "Failed to fetch education details.", variant: "destructive" });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (fetchedEducation) {
+      setEducation(fetchedEducation);
+      setErrors(fetchedEducation.map(() => ({})));
     }
-  }, [user, toast]);
+  }, [fetchedEducation]);
+
+  const saveMutation = useMutation({
+    mutationFn: (educationData: any) => saveJobSeekerEducation(jobSeekerId!, educationData),
+    onSuccess: (response) => {
+      toast({ title: "Success", description: "Education details saved successfully." });
+      const updatedEducations = response.data.data.educations || [];
+      setEducation(updatedEducations);
+      setErrors(updatedEducations.map(() => ({})));
+      queryClient.invalidateQueries({ queryKey: ['education', jobSeekerId] });
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
+      toast({ title: "Error", description: errorMsg, variant: "destructive" });
+    },
+  });
 
   const handleAddEducation = () => {
     setEducation(prev => [...prev, { qualification_type: '', institution: '', year_completed: '', grade: '' }]);
@@ -82,24 +102,14 @@ const Education = () => {
   };
 
   const handleSaveEducation = () => {
-    if (validateEducation() && user && user.job_seeker) {
-      setIsLoading(true);
-      saveJobSeekerEducation(user.job_seeker.id, education)
-        .then((response) => {
-          toast({ title: "Success", description: "Education details saved successfully." });
-          const updatedEducations = response.data.data.educations || [];
-          setEducation(updatedEducations);
-          setErrors(updatedEducations.map(() => ({})));
-        })
-        .catch(error => {
-          const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
-          toast({ title: "Error", description: errorMsg, variant: "destructive" });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (validateEducation()) {
+      saveMutation.mutate(education);
     }
   };
+
+  if (user?.role !== 'job_seeker') {
+    return <div className="p-4">This section is for job seekers only.</div>;
+  }
 
   return (
     <div className="space-y-10">
@@ -115,7 +125,7 @@ const Education = () => {
             <Plus className="mr-2 h-4 w-4" /> Add Education
           </Button>
         </div>
-        {isLoading && !education.length ? <p>Loading...</p> : education.map((edu, index) => (
+        {isLoadingEducation ? <LoadingSpinner text="Loading education details..."/> : education.map((edu, index) => (
           <Card key={edu.id || index} className="border-l-4 border-l-purple-600 overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between bg-gray-50 p-4">
               <CardTitle className="text-base font-semibold">
@@ -169,8 +179,8 @@ const Education = () => {
       </div>
 
       <div className="flex justify-end pt-4">
-        <Button size="lg" onClick={handleSaveEducation} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
-          {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save All Education</>}
+        <Button size="lg" onClick={handleSaveEducation} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={saveMutation.isPending}>
+          {saveMutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save All Education</>}
         </Button>
       </div>
     </div>

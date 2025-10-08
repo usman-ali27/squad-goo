@@ -3,170 +3,147 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Info, Save } from "lucide-react";
+import { Info, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUser, useAuthActions, JobSeeker, Recruiter, Individual } from "@/stores/authStore";
+import { useUser } from "@/stores/authStore";
+import { useProfileData } from "@/contexts/ProfileDataContext";
 import { updateTaxInformation, TaxInformationPayload } from "@/services/profileService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 
 const taxSchema = z.object({
-    tfn: z.string().refine(val => val.length === 0 || (val.length === 9 && /^\d+$/.test(val)), {
-        message: "TFN must be 9 digits.",
-    }),
-    abn: z.string().refine(val => val.length === 0 || (val.length === 11 && /^\d+$/.test(val)), {
-        message: "ABN must be 11 digits.",
-    }),
-    trs: z.string(),
+  tfn: z.string().refine(val => val.length === 0 || (val.length === 9 && /^\d+$/.test(val)), {
+    message: "TFN must be 9 digits.",
+  }),
+  abn: z.string().refine(val => val.length === 0 || (val.length === 11 && /^\d+$/.test(val)), {
+    message: "ABN must be 11 digits.",
+  }),
+  trs: z.string(),
 });
 
 const TaxInformation = () => {
-    const { toast } = useToast();
-    const user = useUser();
-    const { updateJobSeeker, updateRecruiter, updateIndividual } = useAuthActions();
-    const [taxInfo, setTaxInfo] = useState<Omit<TaxInformationPayload, 'id'>>({});
-    const [errors, setErrors] = useState<any>({});
-    const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const user = useUser();
+  const profileData = useProfileData();
+  const queryClient = useQueryClient();
 
-    useEffect(() => {
-        if (user) {
-            const { role, job_seeker, recruiter, individual } = user;
-            let user_details: JobSeeker | Recruiter | Individual | undefined;
+  const [taxInfo, setTaxInfo] = useState<Omit<TaxInformationPayload, 'id'>>({});
+  const [errors, setErrors] = useState<any>({});
 
-            if (role === 'job_seeker') {
-                user_details = job_seeker;
-            } else if (role === 'recruiter') {
-                user_details = recruiter;
-            } else if (role === 'individual') {
-                user_details = individual;
-            }
-
-            if (user_details) {
-                setTaxInfo({
-                    tfn: user_details.tfn,
-                    abn: user_details.abn,
-                    trs: user_details.trs,
-                });
-            }
-        }
-    }, [user]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setTaxInfo(prev => ({ ...prev, [id]: value }));
-        if (errors[id]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[id];
-                return newErrors;
-            });
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        const validationResult = taxSchema.safeParse({
-            tfn: taxInfo.tfn || '',
-            abn: taxInfo.abn || '',
-            trs: taxInfo.trs || '',
+  useEffect(() => {
+    if (profileData) {
+      const userDetails = profileData.job_seeker || profileData.recruiter || profileData.individual;
+      if (userDetails) {
+        setTaxInfo({
+          tfn: userDetails.tfn,
+          abn: userDetails.abn,
+          trs: userDetails.trs,
         });
+      }
+    }
+  }, [profileData]);
 
-        if (!validationResult.success) {
-            const newErrors: any = {};
-            for (const error of validationResult.error.errors) {
-                newErrors[error.path[0]] = error.message;
-            }
-            setErrors(newErrors);
-            toast({
-                title: "Validation Error",
-                description: "Please correct the errors and try again.",
-                variant: "destructive",
-            });
-            return;
-        }
+  const mutation = useMutation({
+    mutationFn: (payload: { role: string, data: TaxInformationPayload }) => updateTaxInformation(payload.role, payload.data),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Tax information saved successfully." });
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.role, user?.id] });
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
+      toast({ title: "Error", description: errorMsg, variant: "destructive" });
+    },
+  });
 
-        setErrors({});
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setTaxInfo(prev => ({ ...prev, [id]: value }));
+    if (errors[id]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[id];
+        return newErrors;
+      });
+    }
+  };
 
-        if (user) {
-            const { role, job_seeker, recruiter, individual } = user;
-            console.log(user)
-            let user_details: JobSeeker | Recruiter | Individual | undefined;
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-            if (role === 'job_seeker') {
-                user_details = job_seeker;
-            } else if (role === 'recruiter') {
-                user_details = recruiter;
-            } else if (role === 'individual') {
-                user_details = individual;
-            }
+    const validationResult = taxSchema.safeParse({
+      tfn: taxInfo.tfn || '',
+      abn: taxInfo.abn || '',
+      trs: taxInfo.trs || '',
+    });
 
-            if (user_details) {
-                setIsLoading(true);
-                const payload: TaxInformationPayload = { ...validationResult.data, id: user_details.id };
-                updateTaxInformation(role, payload)
-                    .then(() => {
-                        toast({ title: "Success", description: "Tax information saved successfully." });
-                        const updatedDetails = { ...user_details, ...taxInfo };
-                        if (role === 'job_seeker') {
-                            updateJobSeeker(updatedDetails as JobSeeker);
-                        } else if (role === 'recruiter') {
-                            updateRecruiter(updatedDetails as Recruiter);
-                        } else if (role === 'individual') {
-                            updateIndividual(updatedDetails as Individual);
-                        }
-                    })
-                    .catch(error => {
-                        const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
-                        toast({ title: "Error", description: errorMsg, variant: "destructive" });
-                    })
-                    .finally(() => {
-                        setIsLoading(false);
-                    });
-            }
-        }
-    };
+    if (!validationResult.success) {
+      const newErrors: any = {};
+      for (const error of validationResult.error.errors) {
+        newErrors[error.path[0]] = error.message;
+      }
+      setErrors(newErrors);
+      toast({
+        title: "Validation Error",
+        description: "Please correct the errors and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const taxFields = [
-        { id: "tfn", label: "TFN", placeholder: "Your 9-digit TFN" },
-        { id: "abn", label: "ABN", placeholder: "Your 11-digit ABN" },
-        { id: "trs", label: "TRS", placeholder: "Your TRS" },
-    ];
+    setErrors({});
 
-    return (
-        <div className="space-y-8">
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight">Tax Information</h2>
-                <div className="w-full h-1 bg-orange-500 rounded-full mt-2" />
-            </div>
+    if (user && profileData) {
+      const { role } = user;
+      const userDetails = profileData.job_seeker || profileData.recruiter || profileData.individual;
+      if (userDetails) {
+        const payload = { ...validationResult.data, id: userDetails.id };
+        mutation.mutate({ role, data: payload });
+      }
+    }
+  };
 
-            <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <Info className="h-5 w-5 text-blue-500" />
-                <p className="text-sm text-blue-700">
-                    Your tax information is kept secure and will only be used for payment purposes.
-                </p>
-            </div>
+  const taxFields = [
+    { id: "tfn", label: "TFN", placeholder: "Your 9-digit TFN" },
+    { id: "abn", label: "ABN", placeholder: "Your 11-digit ABN" },
+    { id: "trs", label: "TRS", placeholder: "Your TRS" },
+  ];
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-                {taxFields.map((field) => (
-                    <div className="space-y-2" key={field.id}>
-                        <Label htmlFor={field.id}>{field.label}</Label>
-                        <Input
-                            id={field.id}
-                            placeholder={field.placeholder}
-                            value={taxInfo[field.id as keyof Omit<TaxInformationPayload, 'id'>] || ''}
-                            onChange={handleChange} />
-                        {errors[field.id] && <p className="text-sm text-red-500 mt-1">{errors[field.id]}</p>}
-                    </div>
-                ))}
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Tax Information</h2>
+        <div className="w-full h-1 bg-orange-500 rounded-full mt-2" />
+      </div>
 
-                <div className="flex justify-end pt-4">
-                    <Button type="submit" className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading}>
-                        {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Tax Information</>}
-                    </Button>
-                </div>
-            </form>
+      <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <Info className="h-5 w-5 text-blue-500" />
+        <p className="text-sm text-blue-700">
+          Your tax information is kept secure and will only be used for payment purposes.
+        </p>
+      </div>
+
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        {taxFields.map((field) => (
+          <div className="space-y-2" key={field.id}>
+            <Label htmlFor={field.id}>{field.label}</Label>
+            <Input
+              id={field.id}
+              placeholder={field.placeholder}
+              value={taxInfo[field.id as keyof Omit<TaxInformationPayload, 'id'>] || ''}
+              onChange={handleChange}
+            />
+            {errors[field.id] && <p className="text-sm text-red-500 mt-1">{errors[field.id]}</p>}
+          </div>
+        ))}
+
+        <div className="flex justify-end pt-4">
+          <Button type="submit" className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={mutation.isPending}>
+            {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Save Tax Information</>}
+          </Button>
         </div>
-    );
+      </form>
+    </div>
+  );
 };
 
 export default TaxInformation;

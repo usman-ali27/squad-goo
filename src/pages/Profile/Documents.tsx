@@ -1,22 +1,14 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { UploadCloud, FileText, Download, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/stores/authStore";
 import { getDocuments, saveDocument, deleteDocument } from "@/services/documentService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const DocumentItem = ({ doc, onDelete }) => {
-  const getStatusClasses = (variant) => {
-    switch (variant) {
-      case 'verified': return 'bg-green-100 text-green-700 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
   const cleanedUrl = doc.file_path ? doc.file_path.replace(/([^:]\/)\/+/g, "$1") : "";
 
   return (
@@ -29,7 +21,6 @@ const DocumentItem = ({ doc, onDelete }) => {
         </div>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0 self-end sm:self-center">
-       
         <Button variant="outline" size="sm" onClick={() => window.open(cleanedUrl, '_blank')} disabled={!cleanedUrl}>
             <Download className="mr-2 h-4 w-4" />
             Download
@@ -45,74 +36,59 @@ const DocumentItem = ({ doc, onDelete }) => {
 const DocumentManagement = () => {
   const { toast } = useToast();
   const user = useUser();
-  const [documents, setDocuments] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const queryClient = useQueryClient();
+
   const role = user?.role;
   const userId = user?.[role]?.id;
 
-  const fetchDocuments = useCallback(() => {
-    if (role && userId) {
-      setIsLoading(true);
-      getDocuments(role, userId)
-        .then(response => {
-          setDocuments(response.data.data || []);
-        })
-        .catch(() => {
-          toast({ title: "Error", description: "Failed to fetch documents.", variant: "destructive" });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  }, [role, userId, toast]);
+  const { data: documents, isLoading } = useQuery({
+    queryKey: ['documents', role, userId],
+    queryFn: () => getDocuments(role!, userId!),
+    enabled: !!role && !!userId,
+    select: (response) => response.data.data || [],
+  });
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
+  const uploadMutation = useMutation({
+    mutationFn: ({ role, userId, formData }: { role: string; userId: number; formData: FormData }) => saveDocument(role, userId, formData),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Document uploaded successfully." });
+      queryClient.invalidateQueries({ queryKey: ['documents', role, userId] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save document.", variant: "destructive" });
+    },
+    onSettled: () => {
+      if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: ({ role, docId }: { role: string; docId: number }) => deleteDocument(role, docId),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Document removed." });
+      queryClient.invalidateQueries({ queryKey: ['documents', role, userId] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to remove document.", variant: "destructive" });
+    },
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    if (!role || !userId) return;
-
-    setIsUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("doc_name", file.name);
-
-    try {
-      await saveDocument(role, userId, formData);
-      toast({ title: "Success", description: "Document uploaded successfully." });
-      fetchDocuments(); // Refresh list
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save document.", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-       if(fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    if (file && role && userId) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("doc_name", file.name);
+      uploadMutation.mutate({ role, userId, formData });
     }
   };
 
   const handleDelete = (docId: number) => {
     if (role) {
-      deleteDocument(role, docId)
-        .then(() => {
-          toast({ title: "Success", description: "Document removed." });
-          fetchDocuments();
-        })
-        .catch(() => {
-          toast({ title: "Error", description: "Failed to remove document.", variant: "destructive" });
-        });
+      deleteMutation.mutate({ role, docId });
     }
   };
 
@@ -129,21 +105,21 @@ const DocumentManagement = () => {
         onChange={handleFileSelect}
         className="hidden"
         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-        disabled={isUploading}
+        disabled={uploadMutation.isPending}
       />
       <div 
-        className={`border-2 border-dashed border-gray-300 rounded-lg p-8 text-center space-y-2 ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
-        onClick={() => !isUploading && fileInputRef.current?.click()}
+        className={`border-2 border-dashed border-gray-300 rounded-lg p-8 text-center space-y-2 ${uploadMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
+        onClick={() => !uploadMutation.isPending && fileInputRef.current?.click()}
       >
-        {isUploading ? <Loader2 className="mx-auto h-12 w-12 text-gray-400 animate-spin"/> : <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />}
-        <h3 className="text-lg font-semibold">{isUploading ? 'Uploading...' : 'Upload Documents'}</h3>
+        {uploadMutation.isPending ? <Loader2 className="mx-auto h-12 w-12 text-gray-400 animate-spin"/> : <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />}
+        <h3 className="text-lg font-semibold">{uploadMutation.isPending ? 'Uploading...' : 'Upload Documents'}</h3>
         <p className="text-gray-500">Click to browse or drag and drop your files here</p>
         <p className="text-xs text-gray-400">Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 15MB per file)</p>
       </div>
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-purple-700">Uploaded Documents</h3>
-        {isLoading ? <p>Loading...</p> : documents.length > 0 ? (
+        {isLoading ? <LoadingSpinner text="Loading documents..."/> : documents && documents.length > 0 ? (
             <div className="space-y-4">
             {documents.map((doc) => (
                 <DocumentItem key={doc.id} doc={doc} onDelete={handleDelete} />

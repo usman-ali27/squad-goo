@@ -1,4 +1,3 @@
-
 import apiClient from './apiService';
 
 export const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
@@ -10,6 +9,6 @@ export const toBase64 = (file: File): Promise<string> => new Promise((resolve, r
 
 export const uploadFileAsBase64 = async (file: File) => {
     const base64String = await toBase64(file);
-    const response = await apiClient.post('/api/upload-base64-image', { image_base64: base64String });
+    const response = await apiClient.post('/upload-base64-image', { image_base64: base64String });
     return response.data.image_url;
 };

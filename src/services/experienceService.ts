@@ -1,4 +1,3 @@
-
 import apiClient from './apiService';
 
 export interface Experience {
@@ -19,9 +18,9 @@ export interface ExperiencePayload {
 }
 
 export const getJobSeekerExperiences = (jobSeekerId: number) => {
-  return apiClient.get(`/api/jobseeker/${jobSeekerId}/experiences`);
+  return apiClient.get(`/jobseeker/${jobSeekerId}/experiences`);
 };
 
 export const saveJobSeekerExperiences = (payload: ExperiencePayload) => {
-  return apiClient.post('/api/jobseeker/experiences', payload);
+  return apiClient.post('/jobseeker/experiences', payload);
 };

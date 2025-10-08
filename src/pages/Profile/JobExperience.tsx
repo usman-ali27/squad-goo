@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,40 +12,56 @@ import { useUser } from "@/stores/authStore";
 import { getJobSeekerExperiences, saveJobSeekerExperiences, Experience } from "@/services/experienceService";
 import { uploadFileAsBase64 } from "@/services/fileService";
 import { industries } from "@/constants/industries";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const JobExperience = () => {
   const { toast } = useToast();
   const user = useUser();
+  const queryClient = useQueryClient();
+
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [errors, setErrors] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState<number | null>(null);
   const payRateInputsRef = useRef<Record<string, { pay_min: string; pay_max: string }>>({});
 
-  const fetchExperiences = useCallback(() => {
-    if (user && user.job_seeker) {
-      setIsLoading(true);
-      getJobSeekerExperiences(user.job_seeker.id)
-        .then(response => {
-          const expData = response.data.data || [];
-          setExperiences(expData);
-          setErrors(expData.map(() => ({})));
-          expData.forEach((exp: Experience, index: number) => {
-            payRateInputsRef.current[index] = { pay_min: exp.pay_min || '', pay_max: exp.pay_max || '' };
-          });
-        })
-        .catch(() => {
-          toast({ title: "Error", description: "Failed to fetch job experiences.", variant: "destructive" });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  }, [user, toast]);
+  const jobSeekerId = user?.job_seeker?.id;
+
+  const { data: fetchedExperiences, isLoading: isLoadingExperiences } = useQuery({
+    queryKey: ['experiences', jobSeekerId],
+    queryFn: () => getJobSeekerExperiences(jobSeekerId!),
+    enabled: !!jobSeekerId,
+    select: (response) => response.data.data || [],
+    onSuccess: (data) => {
+      setExperiences(data);
+      setErrors(data.map(() => ({})));
+      data.forEach((exp: Experience, index: number) => {
+        payRateInputsRef.current[index] = { pay_min: exp.pay_min || '', pay_max: exp.pay_max || '' };
+      });
+    },
+  });
 
   useEffect(() => {
-    fetchExperiences();
-  }, [fetchExperiences]);
+    if (fetchedExperiences) {
+      setExperiences(fetchedExperiences);
+      setErrors(fetchedExperiences.map(() => ({})));
+      fetchedExperiences.forEach((exp: Experience, index: number) => {
+        payRateInputsRef.current[index] = { pay_min: exp.pay_min || '', pay_max: exp.pay_max || '' };
+      });
+    }
+  }, [fetchedExperiences]);
+
+  const saveMutation = useMutation({
+    mutationFn: (experienceData: { jobseeker_id: number; experiences: Experience[] }) => saveJobSeekerExperiences(experienceData),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Job experiences saved successfully." });
+      queryClient.invalidateQueries({ queryKey: ['experiences', jobSeekerId] });
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
+      toast({ title: "Error", description: errorMsg, variant: "destructive" });
+    },
+  });
 
   const handleAddExperience = () => {
     const newIndex = experiences.length;
@@ -131,22 +147,14 @@ const JobExperience = () => {
   };
 
   const handleSaveChanges = () => {
-    if (validateExperiences() && user && user.job_seeker) {
-      setIsLoading(true);
-      saveJobSeekerExperiences({ jobseeker_id: user.job_seeker.id, experiences })
-        .then(() => {
-          toast({ title: "Success", description: "Job experiences saved successfully." });
-          fetchExperiences(); // Re-fetch data on success
-        })
-        .catch(error => {
-          const errorMsg = error.response?.data?.message || "An unexpected error occurred.";
-          toast({ title: "Error", description: errorMsg, variant: "destructive" });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (validateExperiences() && jobSeekerId) {
+      saveMutation.mutate({ jobseeker_id: jobSeekerId, experiences });
     }
   };
+
+  if (user?.role !== 'job_seeker') {
+    return <div className="p-4">This section is for job seekers only.</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -161,7 +169,7 @@ const JobExperience = () => {
           </Button>
       </div>
 
-      {isLoading && !experiences.length ? <p>Loading...</p> : experiences.map((exp, index) => (
+      {isLoadingExperiences ? <LoadingSpinner text="Loading experiences..." /> : experiences.map((exp, index) => (
         <Card key={exp.id || index} className="border-l-4 border-l-purple-600 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between bg-gray-50 p-4">
             <CardTitle className="text-base font-semibold">{exp.job_title || "New Experience"}</CardTitle>
@@ -237,8 +245,8 @@ const JobExperience = () => {
       ))}
 
       <div className="flex justify-end pt-4">
-        <Button size="lg" onClick={handleSaveChanges} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={isLoading || isUploading !== null}>
-          {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2"/>Save All Experience</>}
+        <Button size="lg" onClick={handleSaveChanges} className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" disabled={saveMutation.isPending || isUploading !== null}>
+          {saveMutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2"/>Save All Experience</>}
         </Button>
       </div>
     </div>

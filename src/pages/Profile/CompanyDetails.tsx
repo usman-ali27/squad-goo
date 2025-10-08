@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useUser, useAuthActions } from "@/stores/authStore";
+import { useUser } from "@/stores/authStore";
+import { useProfileData } from "@/contexts/ProfileDataContext";
 import { Save } from "lucide-react";
 import { z } from "zod";
 import { updateRecruiterCompany } from "@/services/profileService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const validationSchema = z.object({
   company_name: z.string().min(1, "Company name is required").max(150, "Company name cannot exceed 150 characters"),
@@ -23,7 +25,9 @@ const validationSchema = z.object({
 const CompanyDetailsRecruiter = () => {
   const { toast } = useToast();
   const user = useUser();
-  const { updateRecruiter } = useAuthActions();
+  const profileData = useProfileData();
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     company_name: "",
     abn: "",
@@ -35,14 +39,13 @@ const CompanyDetailsRecruiter = () => {
     company_reg_date: "",
   });
   const [errors, setErrors] = useState<any>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [maxDate, setMaxDate] = useState('');
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setMaxDate(today);
-    if (user && user.recruiter) {
-      const { recruiter } = user;
+    if (profileData && user?.role === 'recruiter') {
+      const { recruiter } = profileData;
       setFormData({
         company_name: recruiter.company_name || "",
         abn: recruiter.abn || "",
@@ -54,7 +57,27 @@ const CompanyDetailsRecruiter = () => {
         company_reg_date: recruiter.company_reg_date || "",
       });
     }
-  }, [user]);
+  }, [profileData, user]);
+
+  const mutation = useMutation({
+    mutationFn: updateRecruiterCompany,
+    onSuccess: () => {
+      toast({ title: "Success", description: "Your company details have been updated successfully." });
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.role, user?.id] });
+    },
+    onError: (error: any) => {
+      let errorMessage = "An unexpected error occurred.";
+      if (error.response?.data?.errors) {
+        const fieldErrors = Object.values(error.response.data.errors)[0];
+        if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+          errorMessage = fieldErrors[0];
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    },
+  });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -69,53 +92,24 @@ const CompanyDetailsRecruiter = () => {
         newErrors[error.path[0]] = error.message;
       }
       setErrors(newErrors);
-      toast({
-        title: "Validation Error",
-        description: "Please correct the errors and try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Validation Error", description: "Please correct the errors and try again.", variant: "destructive" });
       return;
     }
 
     setErrors({});
 
-    if (user && user.recruiter) {
-      setIsLoading(true);
+    if (user && profileData.recruiter) {
       const payload = {
-        id: user.recruiter.id,
+        id: profileData.recruiter.id,
         ...formData,
       };
-      updateRecruiterCompany(payload)
-        .then(() => {
-          const updatedRecruiter = { ...user.recruiter, ...formData };
-          updateRecruiter(updatedRecruiter);
-          toast({
-            title: "Success",
-            description: "Your company details have been updated successfully.",
-          });
-        })
-        .catch(error => {
-          let errorMessage = "An unexpected error occurred.";
-          if (error.response?.data?.errors) {
-            const fieldErrors = Object.values(error.response.data.errors)[0];
-            if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
-              errorMessage = fieldErrors[0];
-            }
-          } else if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          }
-
-          toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      mutation.mutate(payload);
     }
   };
+
+  if (user?.role !== 'recruiter') {
+    return <div className="p-4">This section is for recruiters only.</div>;
+  }
 
   return (
     <div className="space-y-8 p-4">
@@ -175,8 +169,8 @@ const CompanyDetailsRecruiter = () => {
         </div>
 
         <div className="flex justify-end pt-4">
-          <Button type="button" onClick={handleSave} variant="orange" className="px-8" disabled={isLoading}>
-            {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+          <Button type="button" onClick={handleSave} variant="orange" className="px-8" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
           </Button>
         </div>
       </form>

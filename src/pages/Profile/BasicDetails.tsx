@@ -7,15 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUser, useAuthActions, JobSeeker, Recruiter, Individual } from "@/stores/authStore";
+import { useUser } from "@/stores/authStore";
 import { useProfileData } from "@/contexts/ProfileDataContext";
 import { updateProfile } from "@/services/profileService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const BasicDetails = () => {
   const { toast } = useToast();
   const user = useUser();
-  const { updateJobSeeker, updateRecruiter, updateIndividual } = useAuthActions();
   const profileData = useProfileData();
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -23,7 +25,6 @@ const BasicDetails = () => {
     address: "",
     bio: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bioWordCount, setBioWordCount] = useState(0);
 
@@ -34,23 +35,42 @@ const BasicDetails = () => {
 
   useEffect(() => {
     if (profileData && user) {
-        const userRole = user.role;
-        const userData = profileData[userRole];
+      const userRole = user.role;
+      const userData = profileData[userRole];
 
-        if (userData) {
-            const { first_name, last_name, dob, address, bio } = userData;
-            const initialBio = bio || "";
-            setFormData({
-                first_name: first_name || "",
-                last_name: last_name || "",
-                dob: dob || "",
-                address: address || "",
-                bio: initialBio,
-            });
-            setBioWordCount(countWords(initialBio));
-        }
+      if (userData) {
+        const { first_name, last_name, dob, address, bio } = userData;
+        const initialBio = bio || "";
+        setFormData({
+          first_name: first_name || "",
+          last_name: last_name || "",
+          dob: dob || "",
+          address: address || "",
+          bio: initialBio,
+        });
+        setBioWordCount(countWords(initialBio));
+      }
     }
-}, [profileData, user]);
+  }, [profileData, user]);
+
+  const mutation = useMutation({
+    mutationFn: (payload: any) => updateProfile(user!.role, payload),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Your basic details have been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.role, user?.id] });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'bio') {
@@ -99,9 +119,8 @@ const BasicDetails = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-    const handleSave = async () => {
+    const handleSave = () => {
     if (validateForm() && user && profileData) {
-      setIsLoading(true);
       const userRole = user.role;
       const roleId = profileData[userRole]?.id;
 
@@ -111,7 +130,6 @@ const BasicDetails = () => {
           description: "Could not find profile ID.",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
@@ -120,32 +138,7 @@ const BasicDetails = () => {
         id: roleId,
       };
 
-      try {
-        await updateProfile(user.role, payload);
-        toast({
-          title: "Success",
-          description: "Your basic details have been updated successfully.",
-        });
-
-        const updatedDetails = { ...profileData[userRole], ...payload };
-        if (userRole === 'job_seeker') {
-            updateJobSeeker(updatedDetails as JobSeeker);
-        } else if (userRole === 'recruiter') {
-            updateRecruiter(updatedDetails as Recruiter);
-        } else if (userRole === 'individual') {
-            updateIndividual(updatedDetails as Individual);
-        }
-
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      mutation.mutate(payload);
     }
   };
 
@@ -218,8 +211,8 @@ const BasicDetails = () => {
           </div>
 
           <div className="flex justify-end pt-6">
-            <Button onClick={handleSave} variant="orange" className="px-8" disabled={isLoading}>
-              {isLoading ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+            <Button onClick={handleSave} variant="orange" className="px-8" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
             </Button>
           </div>
         </CardContent>

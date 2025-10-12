@@ -14,6 +14,10 @@ export interface JobSeekerSettingsPayload {
   jobseeker_id: number;
 }
 
+export const getJobSeekerSettings = (jobseekerId: number) => {
+  return apiClient.get(`/jobseeker/settings/${jobseekerId}`);
+};
+
 export const updateJobSeekerSettings = (payload: JobSeekerSettingsPayload) => {
   return apiClient.post('/jobseeker/settings/update', payload);
 };
@@ -36,4 +40,14 @@ export const getRecruiterSettings = (recruiterId: number) => {
 
 export const updateRecruiterSettings = (payload: RecruiterSettingsPayload) => {
   return apiClient.post('/recruiter/settings/update', payload);
+};
+
+export interface NotificationSettingsPayload {
+  push_notification: 0 | 1;
+  email_notification: 0 | 1;
+  jobseeker_id: number;
+}
+
+export const updateNotificationSettings = (payload: NotificationSettingsPayload) => {
+  return apiClient.post('/jobseeker/update-notifications', payload);
 };

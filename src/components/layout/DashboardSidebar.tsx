@@ -14,7 +14,6 @@ const DashboardSidebar = ({ isOpen }: DashboardSidebarProps) => {
   const recruiterNav = [
     { name: "Dashboard", path: "/dashboard", icon: Home, end: true },
     { name: "Find Staff", path: "/dashboard/find-staff", icon: Users },
-    { name: "Job Pool", path: "/dashboard/job-pool", icon: Briefcase },
     { name: "Applications", path: "/dashboard/applications", icon: FileText },
     { name: "Candidates", path: "/dashboard/candidates", icon: Users },
     { name: "Chat", path: "/dashboard/chat", icon: MessageSquare },
@@ -27,6 +26,7 @@ const DashboardSidebar = ({ isOpen }: DashboardSidebarProps) => {
   const jobSeekerNav = [
     { name: "Dashboard", path: "/dashboard", icon: Home, end: true },
     { name: "Find Jobs", path: "/dashboard/find-jobs", icon: Briefcase },
+    { name: "Job Pool", path: "/dashboard/job-pool", icon: Briefcase },
     { name: "Applications", path: "/dashboard/applications", icon: FileText },
     { name: "Chat", path: "/dashboard/chat", icon: MessageSquare },
     { name: "Wallet", path: "/dashboard/wallet", icon: Wallet },

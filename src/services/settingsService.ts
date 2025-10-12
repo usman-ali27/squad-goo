@@ -17,3 +17,23 @@ export interface JobSeekerSettingsPayload {
 export const updateJobSeekerSettings = (payload: JobSeekerSettingsPayload) => {
   return apiClient.post('/jobseeker/settings/update', payload);
 };
+
+export interface RecruiterSettingsPayload {
+    recruiter_id: number;
+    quick_ai_auto_matching: boolean;
+    quick_min_badge: string;
+    quick_only_pro_jobseekers: boolean;
+    quick_only_inapp_payment: boolean;
+    quick_enable_squad_matching: boolean;
+    manual_min_badge: string;
+    manual_only_pro_jobseekers: boolean;
+    manual_enable_squad_profiles: boolean;
+}
+
+export const getRecruiterSettings = (recruiterId: number) => {
+  return apiClient.get(`/recruiter/settings/${recruiterId}`);
+};
+
+export const updateRecruiterSettings = (payload: RecruiterSettingsPayload) => {
+  return apiClient.post('/recruiter/settings/update', payload);
+};

@@ -30,3 +30,24 @@ export const saveJobSeekerDocument = (payload: { jobseeker_id: number; doc_name:
 export const deleteJobSeekerDocument = (documentId: number) => {
   return apiClient.delete(`/jobseeker/documents/${documentId}`);
 };
+
+export const getJobOffers = (payload: { jobseeker_id: number, status: string }) => {
+    return apiClient.post('/jobseeker/offers', payload);
+};
+
+export const acceptJobOffer = (payload: { offer_id: number }) => {
+    return apiClient.post('/jobseeker/offers/accept', payload);
+};
+
+export interface ModificationRequestPayload {
+  job_offer_id: number;
+  new_pay_rate?: number;
+  new_start_time?: string;
+  new_end_time?: string;
+  modification_note: string;
+  user_id: number;
+}
+
+export const requestModification = (payload: ModificationRequestPayload) => {
+  return apiClient.post('/offers/modifications', payload);
+};

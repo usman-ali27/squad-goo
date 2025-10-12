@@ -173,6 +173,7 @@ const FindStaffPage = () => {
             ...rest,
             job_type: 'manual',
             job_seeker_id: candidateId,
+            recruiter_id: user?.recruiter?.id,
             pay_min: salary_min,
             pay_max: salary_max,
             start_date: startDate,

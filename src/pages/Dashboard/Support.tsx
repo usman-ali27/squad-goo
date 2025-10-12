@@ -45,7 +45,7 @@ import apiClient from "@/services/apiService";
 import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { useUser } from "@/stores/authStore";
 import useDebounce from "@/hooks/useDebounce";
-import { Pagination } from "@/components/ui/Pagination";
+// import { Pagination } from "@/components/ui/Pagination";
 
 const getPriorityClasses = (priority: string) => {
   switch (priority.toLowerCase()) {
@@ -87,20 +87,34 @@ const Support = () => {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  const entityId = useMemo(() => {
+    if (!user) return null;
+    switch (user.role) {
+      case 'job_seeker':
+        return user.job_seeker?.id;
+      case 'recruiter':
+        return user.recruiter?.id;
+      case 'individual':
+          return user.individual?.id;
+      default:
+        return user.id;
+    }
+  }, [user]);
+
   const { data: tickets, isLoading, isError } = useQuery({
-    queryKey: ["tickets", user?.id],
-    queryFn: () => apiClient.get(`/support/tickets/get/${user.id}`).then((res) => res.data.data),
-    enabled: !!user?.id,
+    queryKey: ["tickets", entityId],
+    queryFn: () => apiClient.get(`/support/tickets/get/${entityId}`).then((res) => res.data.data),
+    enabled: !!entityId,
   });
 
   const deleteMutation = useMutation({
     mutationFn: (ticketId: number) => {
-        if (!user?.id) throw new Error("User not found");
-        return apiClient.get(`/support/tickets/delete/${user.id}/${ticketId}`);
+        if (!entityId) throw new Error("User not found");
+        return apiClient.get(`/support/tickets/delete/${entityId}/${ticketId}`);
     },
     onSuccess: () => {
       toast.success("Ticket deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["tickets", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["tickets", entityId] });
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to delete ticket.");
@@ -341,7 +355,7 @@ const Support = () => {
             </Table>
           </div>
           
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <Pagination 
               page={page}
               total={filteredAndSortedTickets.length}
@@ -349,7 +363,7 @@ const Support = () => {
               onPageChange={setPage}
               onPerPageChange={setPerPage}
             />
-          </div>
+          </div> */}
 
         </CardContent>
       </Card>

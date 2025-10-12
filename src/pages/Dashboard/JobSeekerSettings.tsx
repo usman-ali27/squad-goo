@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,16 +20,34 @@ import {
   AlertTriangle,
   Save
 } from "lucide-react";
-import { updateJobSeekerSettings, JobSeekerSettingsPayload } from "@/services/settingsService";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  updateJobSeekerSettings, 
+  JobSeekerSettingsPayload, 
+  updateNotificationSettings, 
+  NotificationSettingsPayload,
+  getJobSeekerSettings
+} from "@/services/settingsService";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { industries } from "@/constants/industries";
 
 const JobSeekerSettings = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const user = useUser();
   const [activeTab, setActiveTab] = useState("job");
   const [date, setDate] = useState<Date>();
+
+  const [offerPreference, setOfferPreference] = useState("both");
+  const [offerFromPreference, setOfferFromPreference] = useState("both");
 
   const [quickOfferSettings, setQuickOfferSettings] = useState({
     directPayments: true,
@@ -47,19 +65,56 @@ const JobSeekerSettings = () => {
     selectedIndustries: false,
   });
   
-  const [selectedIndustries, setSelectedIndustries] = useState({
-    technology: false,
-    healthcare: false,
-    finance: false,
-    retail: false,
-    manufacturing: false,
-    education: false,
-  });
+  const initialIndustriesState = industries.reduce((acc, industry) => {
+    acc[industry] = false;
+    return acc;
+  }, {} as { [key: string]: boolean });
+
+  const [selectedIndustries, setSelectedIndustries] = useState(initialIndustriesState);
 
   const [appSettings, setAppSettings] = useState({
     pushNotifications: true,
     emailNotifications: true,
   });
+
+  const { data: settingsData, isLoading: areSettingsLoading } = useQuery({
+    queryKey: ["jobSeekerSettings", user?.job_seeker?.id],
+    queryFn: () => getJobSeekerSettings(user!.job_seeker!.id),
+    enabled: !!user && !!user.job_seeker,
+  });
+
+  useEffect(() => {
+    if (settingsData) {
+      const settings = settingsData.data.data;
+      setOfferPreference(settings.offer_preference_type || 'both');
+      setOfferFromPreference(settings.offer_from_preference || 'both');
+      setQuickOfferSettings({
+          directPayments: !!settings.quick_offer_only_platform_payment,
+          enoughBalance: !!settings.quick_offer_only_full_balance,
+          proRecruiter: !!settings.quick_offer_only_from_pro
+      });
+      setManualOfferSettings({
+          proRecruiter: !!settings.manual_offer_only_from_pro
+      });
+      setIndividualOfferSettings({
+          proRecruiter: !!settings.individual_offer_only_from_pro,
+          platformPayments: !!settings.individual_offer_only_platform_payment,
+          selectedIndustries: !!settings.individual_offer_industries
+      });
+      const industries = JSON.parse(settings.individual_offer_industries || '[]') as string[];
+      const newSelectedIndustries = { ...initialIndustriesState };
+      for (const industry of industries) {
+          if (industry in newSelectedIndustries) {
+              (newSelectedIndustries as any)[industry] = true;
+          }
+      }
+      setSelectedIndustries(newSelectedIndustries);
+      setAppSettings({
+          pushNotifications: !!settings.push_notification,
+          emailNotifications: !!settings.email_notification
+      });
+    }
+  }, [settingsData]);
 
   const mutation = useMutation({
     mutationFn: updateJobSeekerSettings,
@@ -68,6 +123,7 @@ const JobSeekerSettings = () => {
         title: "Success",
         description: data.data.message || "Your settings have been updated successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ["jobSeekerSettings", user?.job_seeker?.id] });
     },
     onError: (error: AxiosError<{ message: string }>) => {
       const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
@@ -80,11 +136,11 @@ const JobSeekerSettings = () => {
   });
 
   const handleSave = () => {
-    if (!user || user.role !== 'job_seeker') return;
+    if (!user || user.role !== 'job_seeker' || !user.job_seeker) return;
 
     const payload: JobSeekerSettingsPayload = {
-      offer_preference_type: "both",
-      offer_from_preference: "both",
+      offer_preference_type: offerPreference,
+      offer_from_preference: offerFromPreference,
       quick_offer_only_platform_payment: quickOfferSettings.directPayments,
       quick_offer_only_full_balance: quickOfferSettings.enoughBalance,
       quick_offer_only_from_pro: quickOfferSettings.proRecruiter,
@@ -94,13 +150,16 @@ const JobSeekerSettings = () => {
       individual_offer_industries: Object.entries(selectedIndustries)
         .filter(([, checked]) => checked)
         .map(([key]) => key),
-      jobseeker_id: user.id,
+      jobseeker_id: user.job_seeker.id,
     };
 
     mutation.mutate(payload);
   };
 
   const renderContent = () => {
+    if (areSettingsLoading) {
+        return <div>Loading...</div>
+    }
     switch (activeTab) {
       case "job":
         return <JobSettings />;
@@ -129,12 +188,30 @@ const JobSeekerSettings = () => {
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center p-3">
             <p className="text-gray-600">Type of Job Offer Preference</p>
-            <div className="bg-white border border-gray-200 rounded-md px-4 py-2 text-sm">Both Manual & Quick</div>
+            <Select value={offerPreference} onValueChange={setOfferPreference}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="quick">Quick</SelectItem>
+                    <SelectItem value="manual">Manual</SelectItem>
+                    <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+            </Select>
           </div>
           <hr/>
           <div className="flex justify-between items-center p-3">
             <p className="text-gray-600">Offers from User Type Preference</p>
-            <div className="bg-white border border-gray-200 rounded-md px-4 py-2 text-sm">Individual & Recruiter</div>
+            <Select value={offerFromPreference} onValueChange={setOfferFromPreference}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="individual">Individual</SelectItem>
+                    <SelectItem value="recruiter">Recruiter</SelectItem>
+                    <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -177,32 +254,6 @@ const JobSeekerSettings = () => {
               }
             />
           </div>
-
-          <div className="bg-[#EFECF8] rounded-lg p-4 mt-6">
-            <h4 className="font-semibold text-gray-800 mb-4">Quick Offer Availability Settings</h4>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-center text-center font-normal bg-white py-10 flex-col h-auto",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <div>Calendar widget for selecting available dates and times</div>
-                  <div className="text-xs">Click to set your availability for quick offers</div>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
         </CardContent>
       </Card>
 
@@ -223,23 +274,7 @@ const JobSeekerSettings = () => {
               }
             />
           </div>
-          <div className="bg-[#FFF9F6] border border-[#F9EAE1] rounded-lg p-4 mt-6">
-            <h4 className="font-semibold text-orange-600 mb-4">Manual Offer Availability Settings</h4>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-center text-center font-normal bg-white py-10 flex-col h-auto"
-                >
-                  <div>Calendar widget for selecting available dates and times</div>
-                  <div className="text-xs">Click to set your availability for manual offers</div>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" onSelect={setDate} initialFocus />
-              </PopoverContent>
-            </Popover>
-          </div>
+         
         </CardContent>
       </Card>
 
@@ -282,40 +317,23 @@ const JobSeekerSettings = () => {
             />
           </div>
 
-          <div className="grid grid-cols-4 gap-4 p-3 bg-white rounded-md">
-            {Object.entries(selectedIndustries).map(([key, checked]) => (
-              <div key={key} className="flex items-center space-x-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-3 bg-white rounded-md">
+            {industries.map((industry) => (
+              <div key={industry} className="flex items-center space-x-2">
                 <Checkbox
-                  id={key}
-                  checked={checked}
+                  id={industry}
+                  checked={selectedIndustries[industry] || false}
                   onCheckedChange={(checked) =>
-                    setSelectedIndustries((prev) => ({ ...prev, [key]: checked as boolean }))
+                    setSelectedIndustries((prev) => ({ ...prev, [industry]: checked as boolean }))
                   }
                 />
-                <label htmlFor={key} className="text-sm capitalize cursor-pointer text-gray-600">
-                  {key}
+                <label htmlFor={industry} className="text-sm capitalize cursor-pointer text-gray-600">
+                  {industry}
                 </label>
               </div>
             ))}
           </div>
-
-          <div className="bg-[#FFF9F6] border border-[#F9EAE1] rounded-lg p-4 mt-6">
-            <h4 className="font-semibold text-orange-600 mb-4">Individual Offers Availability Settings</h4>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-center text-center font-normal bg-white py-10 flex-col h-auto"
-                >
-                  <div>Calendar widget for selecting available dates and times</div>
-                  <div className="text-xs">Click to set your availability for individual offers</div>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" onSelect={setDate} initialFocus />
-              </PopoverContent>
-            </Popover>
-          </div>
+        
         </CardContent>
       </Card>
        <div className="flex justify-end pt-6">
@@ -326,112 +344,82 @@ const JobSeekerSettings = () => {
     </div>
   );
 
-  const AppSettings = () => (
-    <div className="space-y-6">
-       <h1 className="text-2xl font-bold text-gray-800">App Settings</h1>
-        <Card className="bg-[#F7F7FD] border-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-600">
-                <Users className="h-5 w-5" />
-                Account Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-              <div className="flex justify-between items-center p-3">
-                <p className="text-gray-600">Sign Out (Job Seeker ID: #JS12345)</p>
-                <Button variant="outline" className="bg-gray-700 text-white">Sign Out</Button>
-              </div>
-              <hr/>
-              <div className="flex justify-between items-center p-3">
-                <p className="text-gray-600">Manage Account/Profile</p>
-                <Button variant="outline" className="bg-blue-600 text-white">Manage Profile</Button>
-              </div>
-              <hr/>
-              <div className="flex justify-between items-center p-3">
-                <p className="text-gray-600">Switch Profile</p>
-                <Button variant="outline" className="bg-purple-600 text-white">Switch to Squad Profile</Button>
-              </div>
-          </CardContent>
-        </Card>
+  const AppSettings = () => {
+    const { toast } = useToast();
+    const user = useUser();
 
-        <Card className="bg-[#F7F7FD] border-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-500">
-                <Bell className="h-5 w-5" />
-                Notifications & Communication
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-              <div className="flex justify-between items-center p-3">
-                <p className="text-gray-600">Push Notifications</p>
-                <Switch
-                  checked={appSettings.pushNotifications}
-                  onCheckedChange={(checked) =>
-                    setAppSettings(prev => ({...prev, pushNotifications: checked}))
-                  }
-                  className="data-[state=checked]:bg-blue-500"
-                />
-              </div>
-              <hr/>
-              <div className="flex justify-between items-center p-3">
-                <p className="text-gray-600">Email Notifications</p>
-                <Switch
-                  checked={appSettings.emailNotifications}
-                  onCheckedChange={(checked) =>
-                    setAppSettings(prev => ({...prev, emailNotifications: checked}))
-                  }
-                  className="data-[state=checked]:bg-blue-500"
-                />
-              </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-[#F7F7FD] border-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-600">
-              <Shield className="h-5 w-5" />
-              Security & Privacy
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center p-3">
-              <p className="text-gray-600">Security and Passwords</p>
-              <Button className="bg-blue-600 text-white">Manage Security</Button>
-            </div>
-          </CardContent>
-        </Card>
+    const notificationMutation = useMutation({
+      mutationFn: updateNotificationSettings,
+      onSuccess: (data) => {
+        toast({
+          title: "Success",
+          description: data.data.message || "Notification settings updated successfully.",
+        });
+      },
+      onError: (error: AxiosError<{ message: string }>) => {
+        const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      },
+    });
 
-        <Card className="bg-[#F7F7FD] border-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-600">
-              <LifeBuoy className="h-5 w-5" />
-              Support & Help
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center p-3">
-              <p className="text-gray-600">Tips & Help</p>
-              <Button className="bg-green-600 text-white">Get Help</Button>
-            </div>
-          </CardContent>
-        </Card>
+    const handleNotificationSave = () => {
+      if (!user || !user.job_seeker) return;
 
-        <Card className="bg-[#F7F7FD] border-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-600">
-              <AlertTriangle className="h-5 w-5" />
-              Danger Zone
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center p-3">
-              <p className="text-gray-600">Close Your Account Permanently</p>
-              <Button className="bg-red-600 text-white">Delete Account</Button>
-            </div>
-          </CardContent>
-        </Card>
-    </div>
-  );
+      const payload: NotificationSettingsPayload = {
+        push_notification: appSettings.pushNotifications ? 1 : 0,
+        email_notification: appSettings.emailNotifications ? 1 : 0,
+        jobseeker_id: user.job_seeker.id,
+      };
+
+      notificationMutation.mutate(payload);
+    };
+
+    return (
+      <div className="space-y-6">
+         <h1 className="text-2xl font-bold text-gray-800">App Settings</h1>
+          <Card className="bg-[#F7F7FD] border-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-500">
+                  <Bell className="h-5 w-5" />
+                  Notifications & Communication
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex justify-between items-center p-3">
+                  <p className="text-gray-600">Push Notifications</p>
+                  <Switch
+                    checked={appSettings.pushNotifications}
+                    onCheckedChange={(checked) =>
+                      setAppSettings(prev => ({...prev, pushNotifications: checked}))
+                    }
+                    className="data-[state=checked]:bg-blue-500"
+                  />
+                </div>
+                <hr/>
+                <div className="flex justify-between items-center p-3">
+                  <p className="text-gray-600">Email Notifications</p>
+                  <Switch
+                    checked={appSettings.emailNotifications}
+                    onCheckedChange={(checked) =>
+                      setAppSettings(prev => ({...prev, emailNotifications: checked}))
+                    }
+                    className="data-[state=checked]:bg-blue-500"
+                  />
+                </div>
+            </CardContent>
+          </Card>
+          <div className="flex justify-end pt-6">
+              <Button onClick={handleNotificationSave} variant="orange" className="px-8" disabled={notificationMutation.isPending}>
+                {notificationMutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+              </Button>
+          </div>
+      </div>
+    );
+  }
 
   const SquadSettings = () => (
     <div className="space-y-6">

@@ -35,8 +35,9 @@ export const getJobOffers = (payload: { jobseeker_id: number, status: string }) 
     return apiClient.post('/jobseeker/offers', payload);
 };
 
-export const acceptJobOffer = (payload: { offer_id: number }) => {
-    return apiClient.post('/jobseeker/offers/accept', payload);
+export const acceptJobOffer = (payload: { offer_id: number, jobseeker_id: number, action: string }) => {
+    const { offer_id, ...rest } = payload;
+    return apiClient.post(`/jobseeker/offers/${offer_id}/action`, rest);
 };
 
 export interface ModificationRequestPayload {

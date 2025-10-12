@@ -21,7 +21,7 @@ import { useUser } from "@/stores/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
-  Calendar,
+  Calendar as CalendarIcon,
   CircleDollarSign,
   Clock,
   MapPin,
@@ -29,6 +29,10 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const JobPool = () => {
   const user = useUser();
@@ -37,10 +41,11 @@ const JobPool = () => {
   const [status, setStatus] = useState("active");
   const [selectedOffer, setSelectedOffer] = useState<any | null>(null);
   const [isModificationOpen, setIsModificationOpen] = useState(false);
+  const [newStartTime, setNewStartTime] = useState<Date | undefined>();
+  const [newEndTime, setNewEndTime] = useState<Date | undefined>();
+
   const [modificationDetails, setModificationDetails] = useState({
     new_pay_rate: "",
-    new_start_time: "",
-    new_end_time: "",
     modification_note: "",
   });
 
@@ -98,8 +103,12 @@ const JobPool = () => {
   });
 
   const handleAcceptOffer = () => {
-    if (selectedOffer) {
-      acceptOffer({ offer_id: selectedOffer.id });
+    if (selectedOffer && jobseekerId) {
+      acceptOffer({
+        offer_id: selectedOffer.id,
+        jobseeker_id: jobseekerId,
+        action: "accept",
+      });
     }
   };
 
@@ -116,8 +125,10 @@ const JobPool = () => {
       requestOfferModification({
         job_offer_id: selectedOffer.id,
         user_id: jobseekerId!,
-        ...modificationDetails,
+        modification_note: modificationDetails.modification_note,
         new_pay_rate: parseFloat(modificationDetails.new_pay_rate) || undefined,
+        new_start_time: newStartTime ? format(newStartTime, "yyyy-MM-dd HH:mm:ss") : undefined,
+        new_end_time: newEndTime ? format(newEndTime, "yyyy-MM-dd HH:mm:ss") : undefined,
       });
     }
   };
@@ -125,16 +136,16 @@ const JobPool = () => {
   const handleCloseModificationDialog = () => {
     setIsModificationOpen(false);
     setSelectedOffer(null);
+    setNewStartTime(undefined);
+    setNewEndTime(undefined);
     setModificationDetails({
       new_pay_rate: "",
-      new_start_time: "",
-      new_end_time: "",
       modification_note: "",
     });
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 bg-gray-50 min-h-screen">
       <div className="bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-center text-purple-800 mb-8">
           Job Pool
@@ -143,44 +154,40 @@ const JobPool = () => {
         {/* Status Buttons */}
         <div className="flex justify-center gap-2 mb-8">
           <Button
-            className={`${
-              status === "active"
-                ? "bg-purple-700 text-white"
-                : "text-gray-600"
-            }`}
+            className={`${status === "active"
+              ? "bg-purple-700 text-white"
+              : "text-gray-600"
+              }`}
             variant="ghost"
             onClick={() => setStatus("active")}
           >
             Active Offers
           </Button>
           <Button
-            className={`${
-              status === "expired"
-                ? "bg-purple-700 text-white"
-                : "text-gray-600"
-            }`}
+            className={`${status === "expired"
+              ? "bg-purple-700 text-white"
+              : "text-gray-600"
+              }`}
             variant="ghost"
             onClick={() => setStatus("expired")}
           >
             Expired Offers
           </Button>
           <Button
-            className={`${
-              status === "declined"
-                ? "bg-purple-700 text-white"
-                : "text-gray-600"
-            }`}
+            className={`${status === "declined"
+              ? "bg-purple-700 text-white"
+              : "text-gray-600"
+              }`}
             variant="ghost"
             onClick={() => setStatus("declined")}
           >
             Declined Offers
           </Button>
           <Button
-            className={`${
-              status === "completed"
-                ? "bg-purple-700 text-white"
-                : "text-gray-600"
-            }`}
+            className={`${status === "completed"
+              ? "bg-purple-700 text-white"
+              : "text-gray-600"
+              }`}
             variant="ghost"
             onClick={() => setStatus("completed")}
           >
@@ -215,11 +222,10 @@ const JobPool = () => {
                     <td className="p-4">{offer.start_date}</td>
                     <td className="p-4">
                       <span
-                        className={`px-3 py-1 text-sm rounded-full ${
-                          offer.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
+                        className={`px-3 py-1 text-sm rounded-full ${offer.status === "pending"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-100 text-gray-700"
+                          }`}
                       >
                         {offer.status}
                       </span>
@@ -231,6 +237,22 @@ const JobPool = () => {
                         onClick={() => setSelectedOffer(offer)}
                       >
                         View
+                      </Button>
+                      <Button
+                        variant="orange"
+                        size="sm"
+                        onClick={() => {
+                          if (jobseekerId) {
+                            acceptOffer({
+                              offer_id: offer.id,
+                              jobseeker_id: jobseekerId,
+                              action: "accept",
+                            });
+                          }
+                        }}
+                        disabled={isAccepting}
+                      >
+                        {isAccepting ? "Accepting..." : "Accept Offer"}
                       </Button>
                       <Button
                         variant="orange"
@@ -297,7 +319,7 @@ const JobPool = () => {
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <Calendar className="w-5 h-5 mr-3 mt-1 text-purple-600 flex-shrink-0" />
+                  <CalendarIcon className="w-5 h-5 mr-3 mt-1 text-purple-600 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-gray-700">Start Date</p>
                     <p className="text-gray-600 text-sm">
@@ -306,7 +328,7 @@ const JobPool = () => {
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <Calendar className="w-5 h-5 mr-3 mt-1 text-purple-600 flex-shrink-0" />
+                  <CalendarIcon className="w-5 h-5 mr-3 mt-1 text-purple-600 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-gray-700">End Date</p>
                     <p className="text-gray-600 text-sm">{selectedOffer.end_date}</p>
@@ -376,51 +398,71 @@ const JobPool = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new_pay_rate">New Pay Rate</Label>
-                  <Input
-                    id="new_pay_rate"
-                    placeholder="e.g., 40.00"
-                    type="number"
-                    value={modificationDetails.new_pay_rate}
-                    onChange={(e) =>
-                      setModificationDetails({
-                        ...modificationDetails,
-                        new_pay_rate: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="new_pay_rate">New Pay Rate</Label>
+                <Input
+                  id="new_pay_rate"
+                  placeholder="e.g., 40.00"
+                  type="number"
+                  value={modificationDetails.new_pay_rate}
+                  onChange={(e) =>
+                    setModificationDetails({
+                      ...modificationDetails,
+                      new_pay_rate: e.target.value,
+                    })
+                  }
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new_start_time">New Start Time</Label>
-                  <Input
-                    id="new_start_time"
-                    placeholder="YYYY-MM-DD HH:MM:SS"
-                    value={modificationDetails.new_start_time}
-                    onChange={(e) =>
-                      setModificationDetails({
-                        ...modificationDetails,
-                        new_start_time: e.target.value,
-                      })
-                    }
-                  />
+                  <Label>New Start Time</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newStartTime && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newStartTime ? format(newStartTime, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={newStartTime}
+                        onSelect={setNewStartTime}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="new_end_time">New End Time</Label>
-                  <Input
-                    id="new_end_time"
-                    placeholder="YYYY-MM-DD HH:MM:SS"
-                    value={modificationDetails.new_end_time}
-                    onChange={(e) =>
-                      setModificationDetails({
-                        ...modificationDetails,
-                        new_end_time: e.target.value,
-                      })
-                    }
-                  />
+                  <Label>New End Time</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newEndTime && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newEndTime ? format(newEndTime, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={newEndTime}
+                        onSelect={setNewEndTime}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               <div className="space-y-2">
